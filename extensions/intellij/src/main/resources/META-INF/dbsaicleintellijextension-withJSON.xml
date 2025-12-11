@@ -1,0 +1,10 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory
+                implementation="com.github.dbsaicledev.dbsaicleintellijextension.dbsaicle.ConfigJsonSchemaProviderFactory"/>
+    </extensions>
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory
+                implementation="com.github.dbsaicledev.dbsaicleintellijextension.dbsaicle.ConfigRcJsonSchemaProviderFactory"/>
+    </extensions>
+</idea-plugin>

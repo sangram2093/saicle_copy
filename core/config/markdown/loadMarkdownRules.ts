@@ -1,0 +1,57 @@
+import {
+  ConfigValidationError,
+  markdownToRule,
+} from "@dbsaicledev/config-yaml";
+import { IDE, RuleWithSource } from "../..";
+import { findUriInDirs } from "../../util/uri";
+import { getAllDotDbSaicleDefinitionFiles } from "../loadLocalAssistants";
+
+/**
+ * Loads rules from markdown files in the .dbsaicle/rules directory
+ */
+export async function loadMarkdownRules(ide: IDE): Promise<{
+  rules: RuleWithSource[];
+  errors: ConfigValidationError[];
+}> {
+  const errors: ConfigValidationError[] = [];
+  const rules: RuleWithSource[] = [];
+
+  try {
+    // Get all .md files from .dbsaicle/rules
+    const markdownFiles = await getAllDotDbSaicleDefinitionFiles(
+      ide,
+      { includeGlobal: true, includeWorkspace: true, fileExtType: "markdown" },
+      "rules",
+    );
+
+    // Filter to just .md files
+    const mdFiles = markdownFiles.filter((file) => file.path.endsWith(".md"));
+
+    // Process each markdown file
+    for (const file of mdFiles) {
+      try {
+        const { relativePathOrBasename } = findUriInDirs(
+          file.path,
+          await ide.getWorkspaceDirs(),
+        );
+        const rule = markdownToRule(file.content, {
+          uriType: "file",
+          fileUri: relativePathOrBasename,
+        });
+        rules.push({ ...rule, source: "rules-block", ruleFile: file.path });
+      } catch (e) {
+        errors.push({
+          fatal: false,
+          message: `Failed to parse markdown rule file ${file.path}: ${e instanceof Error ? e.message : e}`,
+        });
+      }
+    }
+  } catch (e) {
+    errors.push({
+      fatal: false,
+      message: `Error loading markdown rule files: ${e instanceof Error ? e.message : e}`,
+    });
+  }
+
+  return { rules, errors };
+}

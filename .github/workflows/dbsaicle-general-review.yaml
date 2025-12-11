@@ -1,0 +1,25 @@
+name: DbSaicle General Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  general-code-review:
+    name: DbSaicle General Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run DbSaicle PR Review Action
+        uses: dbsaicledev/dbsaicle/actions/general-review@5dc7a050db441934c26eb910b8433291f627db7f
+        with:
+          dbsaicle-api-key: ${{ secrets.DBSAICLE_API_KEY }}
+          dbsaicle-org: "dbsaicledev"
+          dbsaicle-config: "dbsaicledev/review-bot"

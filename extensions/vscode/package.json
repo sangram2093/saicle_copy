@@ -1,0 +1,775 @@
+{
+  "name": "dbsaicle",
+  "icon": "media/icon.png",
+  "author": "Abhijeet Lele",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbsaicledev/dbsaicle"
+  },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "bugs": {
+    "url": "https://github.com/abhijeet-lele/db-saicle/issues",
+    "email": "abhijeet.lele@db.com"
+  },
+  "homepage": "https://dbsaicle.dev",
+  "qna": "https://github.com/dbsaicledev/dbsaicle/issues/new/choose",
+  "license": "Apache-2.0",
+  "displayName": "DbSaicle - open-source AI code agent",
+  "pricing": "Free",
+  "description": "The leading open-source AI code agent",
+  "publisher": "DbSaicle",
+  "engines": {
+    "vscode": "^1.70.0",
+    "node": ">=20.19.0"
+  },
+  "engine-strict": true,
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages",
+    "Education",
+    "Machine Learning",
+    "Snippets"
+  ],
+  "keywords": [
+    "chatgpt",
+    "dbllm",
+    "cline",
+    "roo",
+    "github",
+    "copilot",
+    "claude",
+    "mistral",
+    "codestral",
+    "ai"
+  ],
+  "activationEvents": [
+    "onUri",
+    "onStartupFinished",
+    "onView:dbsaicleGUIView",
+    "onCommand:dbsaicle.openBrowserPanel"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "filenames": [
+          "config.json",
+          ".dbsaiclerc.json"
+        ],
+        "id": "jsonc"
+      },
+      {
+        "id": "promptLanguage",
+        "extensions": [
+          ".prompt"
+        ],
+        "aliases": [
+          "Prompt Language"
+        ],
+        "configuration": "./prompt-file-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "promptLanguage",
+        "scopeName": "source.prompt",
+        "path": "./media/prompt.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "DbSaicle",
+      "properties": {
+        "dbsaicle.telemetryEnabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "DbSaicle collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [dbsaicle.dev â€º Telemetry](https://docs.dbsaicle.dev/telemetry)."
+        },
+        "dbsaicle.showInlineTip": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline suggestion to use the DbSaicle keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+        },
+        "dbsaicle.disableQuickFix": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable the quick fix feature."
+        },
+        "dbsaicle.enableQuickActions": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [dbsaicle.dev â€º Walkthrough: Quick Actions (experimental)](https://docs.dbsaicle.dev/customize/deep-dives/vscode-actions#quick-actions)"
+        },
+        "dbsaicle.enableTabAutocomplete": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable DbSaicle's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [dbsaicle.dev â€º Walkthrough: Tab Autocomplete (beta)](https://docs.dbsaicle.dev/features/tab-autocomplete)"
+        },
+        "dbsaicle.enableNextEdit": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable DbSaicle's next edit feature. Read our docs to learn about configuration and how to share feedback: [dbsaicle.dev â€º Features â€º Autocomplete â€º Next Edit (experimental)](https://docs.dbsaicle.dev/features/autocomplete/next-edit)"
+        },
+        "dbsaicle.pauseTabAutocompleteOnBattery": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause DbSaicle's tab autocomplete feature when your battery is low."
+        },
+        "dbsaicle.pauseCodebaseIndexOnStart": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause DbSaicle's codebase index on start."
+        },
+        "dbsaicle.enableConsole": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
+        },
+        "dbsaicle.remoteConfigServerUrl": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
+        },
+        "dbsaicle.userToken": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
+        },
+        "dbsaicle.remoteConfigSyncPeriod": {
+          "type": "number",
+          "default": 60,
+          "description": "The period of time in minutes between automatic syncs."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "dbsaicle.applyCodeFromChat",
+        "category": "DbSaicle",
+        "title": "Apply code from chat",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.acceptDiff",
+        "category": "DbSaicle",
+        "title": "Accept Diff",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.rejectDiff",
+        "category": "DbSaicle",
+        "title": "Reject Diff",
+        "group": "DbSaicle",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "dbsaicle.openBrowserPanel",
+        "category": "DbSaicle",
+        "title": "Open Browser Preview",
+        "group": "DbSaicle",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "dbsaicle.acceptVerticalDiffBlock",
+        "category": "DbSaicle",
+        "title": "Accept Vertical Diff Block",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.rejectVerticalDiffBlock",
+        "category": "DbSaicle",
+        "title": "Reject Vertical Diff Block",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.focusEdit",
+        "category": "DbSaicle",
+        "title": "Add to Edit",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.focusDbSaicleInput",
+        "category": "DbSaicle",
+        "title": "Add Highlighted Code to Context and Clear Chat",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.focusDbSaicleInputWithoutClear",
+        "category": "DbSaicle",
+        "title": "Add to Chat",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.debugTerminal",
+        "category": "DbSaicle",
+        "title": "Debug Terminal",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.exitEditMode",
+        "category": "DbSaicle",
+        "title": "Exit Edit Mode",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.openConfigPage",
+        "category": "DbSaicle",
+        "title": "Open Settings",
+        "icon": "$(gear)",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.toggleTabAutocompleteEnabled",
+        "category": "DbSaicle",
+        "title": "Toggle Autocomplete Enabled",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.forceAutocomplete",
+        "title": "DbSaicle: Force Autocomplete",
+        "category": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.selectFilesAsContext",
+        "category": "DbSaicle",
+        "title": "Select Files as Context",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.newSession",
+        "category": "DbSaicle",
+        "title": "New Session",
+        "icon": "$(add)",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.viewHistory",
+        "category": "DbSaicle",
+        "title": "View History",
+        "icon": "$(history)",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.viewLogs",
+        "category": "DbSaicle",
+        "title": "View History",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.clearConsole",
+        "category": "DbSaicle",
+        "title": "Clear Console",
+        "icon": "$(clear-all)",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.navigateTo",
+        "category": "DbSaicle",
+        "title": "Navigate to a path",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.writeCommentsForCode",
+        "category": "DbSaicle",
+        "title": "Write Comments for this Code",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.writeDocstringForCode",
+        "category": "DbSaicle",
+        "title": "Write a Docstring for this Code",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.fixCode",
+        "category": "DbSaicle",
+        "title": "Fix this Code",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.optimizeCode",
+        "category": "DbSaicle",
+        "title": "Optimize this Code",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.fixGrammar",
+        "category": "DbSaicle",
+        "title": "Fix Grammar / Spelling",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.codebaseForceReIndex",
+        "category": "DbSaicle",
+        "title": "Codebase Force Re-Index",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.rebuildCodebaseIndex",
+        "category": "DbSaicle",
+        "title": "Rebuild codebase index",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.docsIndex",
+        "category": "DbSaicle",
+        "title": "Docs Index",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.docsReIndex",
+        "category": "DbSaicle",
+        "title": "Docs Force Re-Index",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.focusDbSaicleInput",
+        "category": "DbSaicle",
+        "title": "Focus DbSaicle Chat",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.enterEnterpriseLicenseKey",
+        "category": "DbSaicle",
+        "title": "Enter Enterprise License Key",
+        "group": "DbSaicle"
+      },
+      {
+        "command": "dbsaicle.toggleNextEditEnabled",
+        "title": "DbSaicle: Toggle Next Edit"
+      },
+      {
+        "command": "dbsaicle.nextEditWindow.hideNextEditSuggestion",
+        "category": "DbSaicle",
+        "title": "Hide Next Edit Suggestion"
+      },
+      {
+        "command": "dbsaicle.nextEditWindow.acceptNextEditSuggestion",
+        "category": "DbSaicle",
+        "title": "Accept Next Edit Suggestion"
+      },
+      {
+        "command": "dbsaicle.forceNextEdit",
+        "category": "DbSaicle",
+        "title": "DbSaicle: Force Next Edit"
+      },
+      {
+        "command": "dbsaicle.acceptJump",
+        "category": "DbSaicle",
+        "title": "DbSaicle: Accept Jump Suggestion"
+      },
+      {
+        "command": "dbsaicle.rejectJump",
+        "category": "DbSaicle",
+        "title": "DbSaicle: Reject Jump Suggestion"
+      },
+      {
+        "command": "dbsaicle.generateRule",
+        "category": "DbSaicle",
+        "title": "Generate Rule",
+        "group": "DbSaicle"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dbsaicle.focusDbSaicleInput",
+        "mac": "cmd+l",
+        "key": "ctrl+l"
+      },
+      {
+        "command": "dbsaicle.focusDbSaicleInputWithoutClear",
+        "mac": "cmd+shift+l",
+        "key": "ctrl+shift+l"
+      },
+      {
+        "command": "dbsaicle.acceptDiff",
+        "mac": "shift+cmd+enter",
+        "key": "shift+ctrl+enter",
+        "when": "dbsaicle.diffVisible"
+      },
+      {
+        "command": "dbsaicle.rejectDiff",
+        "mac": "shift+cmd+backspace",
+        "key": "shift+ctrl+backspace",
+        "when": "dbsaicle.diffVisible"
+      },
+      {
+        "command": "dbsaicle.rejectDiff",
+        "mac": "cmd+z",
+        "key": "ctrl+z",
+        "when": "dbsaicle.diffVisible"
+      },
+      {
+        "command": "dbsaicle.quickEditHistoryUp",
+        "mac": "up",
+        "key": "up",
+        "when": "false && dbsaicle.quickEditHistoryFocused"
+      },
+      {
+        "command": "dbsaicle.quickEditHistoryDown",
+        "mac": "down",
+        "key": "down",
+        "when": "false && dbsaicle.quickEditHistoryFocused"
+      },
+      {
+        "command": "dbsaicle.acceptVerticalDiffBlock",
+        "mac": "alt+cmd+y",
+        "key": "alt+ctrl+y"
+      },
+      {
+        "command": "dbsaicle.rejectVerticalDiffBlock",
+        "mac": "alt+cmd+n",
+        "key": "alt+ctrl+n"
+      },
+      {
+        "command": "dbsaicle.focusEdit",
+        "title": "Edit code with natural language",
+        "mac": "cmd+i",
+        "key": "ctrl+i"
+      },
+      {
+        "command": "dbsaicle.exitEditMode",
+        "mac": "escape",
+        "key": "escape",
+        "when": "dbsaicle.inEditMode && editorFocus"
+      },
+      {
+        "command": "dbsaicle.debugTerminal",
+        "mac": "cmd+shift+r",
+        "key": "ctrl+shift+r"
+      },
+      {
+        "command": "dbsaicle.toggleTabAutocompleteEnabled",
+        "mac": "cmd+k cmd+a",
+        "key": "ctrl+k ctrl+a",
+        "when": "!terminalFocus"
+      },
+      {
+        "command": "dbsaicle.forceAutocomplete",
+        "key": "ctrl+alt+space",
+        "mac": "cmd+alt+space",
+        "when": "editorTextFocus && !editorHasSelection && !editorReadOnly && !inSnippetMode"
+      },
+      {
+        "command": "dbsaicle.applyCodeFromChat",
+        "mac": "alt+a",
+        "key": "alt+a"
+      },
+      {
+        "command": "dbsaicle.toggleNextEditEnabled",
+        "key": "ctrl+k ctrl+n",
+        "mac": "cmd+k cmd+n",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "dbsaicle.nextEditWindow.hideNextEditSuggestion",
+        "key": "escape",
+        "when": "editorTextFocus && nextEditWindowActive && !dbsaicle.jumpDecorationVisible"
+      },
+      {
+        "command": "dbsaicle.nextEditWindow.acceptNextEditSuggestion",
+        "key": "tab",
+        "when": "editorTextFocus && nextEditWindowActive && !dbsaicle.jumpDecorationVisible"
+      },
+      {
+        "command": "dbsaicle.acceptJump",
+        "key": "tab",
+        "when": "editorTextFocus && dbsaicle.jumpDecorationVisible"
+      },
+      {
+        "command": "dbsaicle.rejectJump",
+        "key": "escape",
+        "when": "editorTextFocus && dbsaicle.jumpDecorationVisible"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "dbsaicle.dbsaicleSubMenu",
+        "label": "DbSaicle"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dbsaicle.focusDbSaicleInput"
+        },
+        {
+          "command": "dbsaicle.focusDbSaicleInputWithoutClear"
+        },
+        {
+          "command": "dbsaicle.debugTerminal"
+        },
+        {
+          "command": "dbsaicle.newSession"
+        },
+        {
+          "command": "dbsaicle.enterEnterpriseLicenseKey"
+        },
+        {
+          "command": "dbsaicle.generateRule"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "dbsaicle.dbsaicleSubMenu",
+          "group": "0_adbsaicle"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "dbsaicle.rejectDiff",
+          "group": "DbSaicle",
+          "when": "dbsaicle.streamingDiff"
+        }
+      ],
+      "dbsaicle.dbsaicleSubMenu": [
+        {
+          "command": "dbsaicle.focusDbSaicleInputWithoutClear",
+          "group": "DbSaicle"
+        },
+        {
+          "command": "dbsaicle.focusEdit",
+          "group": "DbSaicle",
+          "when": "!editorReadonly"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "dbsaicle.selectFilesAsContext",
+          "group": "1_debug@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "dbsaicle.newSession",
+          "group": "navigation@1",
+          "when": "view == dbsaicle.dbsaicleGUIView"
+        },
+        {
+          "command": "dbsaicle.viewHistory",
+          "group": "navigation@2",
+          "when": "view == dbsaicle.dbsaicleGUIView"
+        },
+        {
+          "command": "dbsaicle.openConfigPage",
+          "group": "navigation@4",
+          "when": "view == dbsaicle.dbsaicleGUIView"
+        },
+        {
+          "command": "dbsaicle.clearConsole",
+          "group": "navigation@1",
+          "when": "view == dbsaicle.dbsaicleConsoleView"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "dbsaicle.newSession",
+          "group": "navigation@1",
+          "when": "activeWebviewPanelId == dbsaicle.dbsaicleGUIView"
+        },
+        {
+          "command": "dbsaicle.viewHistory",
+          "group": "navigation@2",
+          "when": "activeWebviewPanelId == dbsaicle.dbsaicleGUIView"
+        }
+      ],
+      "terminal/context": [
+        {
+          "command": "dbsaicle.debugTerminal",
+          "group": "navigation@top"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dbsaicle",
+          "title": "DbSaicle",
+          "icon": "media/sidebar-icon.png"
+        }
+      ],
+      "panel": [
+        {
+          "id": "dbsaicleConsole",
+          "title": "DbSaicle Console",
+          "icon": "$(window)"
+        }
+      ]
+    },
+    "views": {
+      "dbsaicle": [
+        {
+          "type": "webview",
+          "id": "dbsaicle.dbsaicleGUIView",
+          "name": "DbSaicle",
+          "icon": "media/sidebar-icon.png",
+          "visibility": "visible"
+        }
+      ],
+      "dbsaicleConsole": [
+        {
+          "type": "webview",
+          "id": "dbsaicle.dbsaicleConsoleView",
+          "name": "DbSaicle Console",
+          "icon": "$(window)",
+          "visibility": "visible",
+          "when": "config.dbsaicle.enableConsole"
+        }
+      ]
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "**/.dbsaicle*/config.json",
+        "url": "./config_schema.json"
+      },
+      {
+        "fileMatch": ".dbsaiclerc.json",
+        "url": "./dbsaicle_rc_schema.json"
+      },
+      {
+        "fileMatch": "**/config.yaml",
+        "url": "./config-yaml-schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "esbuild-base": "node scripts/esbuild.js",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "esbuild-notify": "npm run esbuild-base -- --sourcemap --notify",
+    "esbuild:visualize": "esbuild-visualizer --metadata ./build/meta.json --filename ./build/stats.html --open",
+    "tsc": "tsc -p ./",
+    "tsc:check": "tsc -p ./ --noEmit",
+    "tsc-watch": "tsc -watch -p ./",
+    "rebuild": "electron-rebuild -v 19.1.8 node-pty",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "eslint . --ext ts --fix",
+    "test": "vitest run",
+    "vitest": "vitest run",
+    "write-build-timestamp": "node scripts/write-build-timestamp.js",
+    "prepackage": "node scripts/prepackage.js",
+    "package": "node scripts/package.js",
+    "package-all": "node scripts/package-all.js",
+    "package:pre-release": "node scripts/package.js --pre-release",
+    "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
+    "build-debug:rust": "npm run build:rust --",
+    "build-release:rust": "npm run build:rust -- --release",
+    "e2e:compile": "tsc -p ./tsconfig.e2e.json",
+    "e2e:build": "npm --prefix ../../gui run build && npm run package",
+    "e2e:create-storage": "mkdir -p ./e2e/storage",
+    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage --code_version 1.95.0",
+    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage --code_version 1.95.0",
+    "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
+    "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
+    "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/dbsaicle.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:install-extensions": "extest install-from-marketplace ms-vscode-remote.remote-ssh --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-containers --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage && extest install-from-marketplace ms-vscode-remote.remote-wsl --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:test": "NODE_ENV=e2e extest run-tests ${TEST_FILE:-'./e2e/_output/tests/*.test.js'} --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:clean": "rm -rf ./e2e/_output ./e2e/storage",
+    "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test && npm run e2e:clean",
+    "e2e:all-non-mac": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test && npm run e2e:clean",
+    "e2e:recompile-extension": "npm run package && npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test && npm run e2e:clean",
+    "e2e:rebuild-gui": "rm -rf gui && cp -r ../../gui/dist gui && npm run package && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test && npm run e2e:clean",
+    "e2e:quick": "npm run e2e:compile && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test && npm run e2e:clean",
+    "e2e:ci:download": "npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode",
+    "e2e:ci:run": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle npm run e2e:test",
+    "e2e:ci:run-yaml": "npm run e2e:compile && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:install-extensions && DBSAICLE_GLOBAL_DIR=e2e/test-dbsaicle-yaml npm run e2e:test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.6.4",
+    "@nestjs/common": "^11.0.16",
+    "@openapitools/openapi-generator-cli": "^2.23.1",
+    "@types/chai": "^5.0.1",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/follow-redirects": "^1.14.4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "16.x",
+    "@types/node-fetch": "^2.6.12",
+    "@types/react-dom": "^18.2.4",
+    "@types/request": "^2.48.8",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "1.70",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@vscode/vsce": "^2.22.0",
+    "cargo-cp-artifact": "^0.1",
+    "chai": "^4.5.0",
+    "esbuild": "0.17.19",
+    "esbuild-visualizer": "^0.6.0",
+    "eslint": "^8.28.0",
+    "json-schema-to-typescript": "^12.0.0",
+    "ovsx": "^0.8.3",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.6.3",
+    "vite": "^4.5.14",
+    "vscode-extension-tester": "^8.14.1"
+  },
+  "dependencies": {
+    "@dbsaicledev/config-types": "file:../../packages/config-types",
+    "@dbsaicledev/fetch": "file:../../packages/fetch",
+    "@electron/rebuild": "^3.2.10",
+    "@reduxjs/toolkit": "^1.9.3",
+    "@vscode/ripgrep": "^1.15.9",
+    "axios": "^1.2.5",
+    "core": "file:../../core",
+    "cors": "^2.8.5",
+    "dbinfoz": "^0.14.0",
+    "diff": "^7.0.0",
+    "downshift": "^7.6.0",
+    "esbuild": "0.17.19",
+    "express": "^4.18.2",
+    "fkill": "^8.1.0",
+    "follow-redirects": "^1.15.4",
+    "handlebars": "^4.7.8",
+    "highlight.js": "^11.7.0",
+    "highlightable": "^1.3.0-beta.0",
+    "http-proxy": "^1.18.1",
+    "http-proxy-agent": "^7.0.0",
+    "http-proxy-middleware": "^2.0.9",
+    "https-proxy-agent": "^7.0.2",
+    "ignore": "^5.3.0",
+    "jsdom": "^24.0.0",
+    "lru-cache": "^11.0.2",
+    "minisearch": "^7.0.0",
+    "mocha": "^11.7.1",
+    "monaco-editor": "^0.45.0",
+    "monaco-vscode-textmate-theme-converter": "^0.1.7",
+    "ncp": "^2.0.0",
+    "node-fetch": "^3.3.2",
+    "node-machine-id": "^1.1.12",
+    "posthog-node": "^3.6.3",
+    "puppeteer-chromium-resolver": "^23.0.0",
+    "puppeteer-core": "^23.4.0",
+    "react-markdown": "^8.0.7",
+    "react-redux": "^8.0.5",
+    "read-last-lines": "^1.8.0",
+    "request": "^2.88.2",
+    "socket.io-client": "^4.7.2",
+    "strip-ansi": "^7.1.0",
+    "svg-builder": "^2.0.0",
+    "systeminformation": "^5.23.7",
+    "tailwindcss": "^3.3.2",
+    "undici": "^6.21.3",
+    "uuid": "^9.0.1",
+    "uuidv4": "^6.2.13",
+    "vectordb": "^0.4.20",
+    "vitest": "^3.1.4",
+    "vscode-languageclient": "^8.0.2",
+    "ws": "^8.13.0",
+    "yarn": "^1.22.21"
+  },
+  "overrides": {
+    "vitest": {
+      "@types/node": "^16.18.119"
+    }
+  }
+}

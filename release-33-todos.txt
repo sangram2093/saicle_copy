@@ -1,0 +1,34 @@
+// convert following functions to Tools
+getJiraDescription now has the base64 encoding
+getJiraDescriptionText is added
+setJiraDescriptionText is added
+getJiraLabels is added
+setJiraLabels is added
+setJiraActivityType is added
+createEpic is added
+createFeature is added
+createStory is added
+createSubtask is added
+searchJiraIssuesWithJql is added
+setJiraDependency is added
+findSubtasksByType is added
+addAttachment is added
+
+get and set due date, planned start date, planned end date
+
+get and set Fix Version/s
+
+get and set "Acceptance Criteria"
+
+
+// todo: add field to specify the dbLLM url (to allow for UAT url to be consumed)
+
+
+convert methods getJiraDescriptionText, setJiraDescriptionText, getJiraLabels, setJiraLabels, setJiraActivityType, createEpic, createFeature, createStory, createSubtask, searchJiraIssuesWithJql, 
+setJiraDependency, getIssueAttachments, findSubtasksByActivityType, addAttachment, getDueDate, setDueDate, getPlannedStartDate, setPlannedStartDate, getPlannedEndDate, setPlannedEndDate,
+getAcceptanceCriteria, setAcceptanceCriteria, getFixVersionsForJiraIssue, getProjectVersions, setFixVersionsForJiraIssue
+as tools. The tool names should start with jira_ as suffix for the tool. 
+The tool implementations should use the jira_domain, jira_api_token, jira_auth_email values from config.
+Add these jira tools to builtin tools. 
+Please ensure that tool implementations for 'jira_*' are called on invocation of the tool.
+**Important** refer earlier tools defintions as template.

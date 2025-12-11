@@ -1,0 +1,27 @@
+binary/bin
+binary/build
+binary/out
+binary/tmp
+core/.dbsaicle-test
+docs/.docusaurus
+extensions/.dbsaicle-debug
+extensions/vscode/dbsaicle_rc_schema.json
+extensions/vscode/.vscode-test
+extensions/vscode/bin
+extensions/vscode/build
+extensions/vscode/out
+extensions/vscode/gui
+extensions/vscode/e2e/.test-extensions
+extensions/vscode/e2e/test-dbsaicle
+extensions/vscode/models
+extensions/intellij/src/main/resources
+gui/dist
+**/.dbsaicleignore
+CHANGELOG.md
+**/dbsaicle_tutorial.py
+**/node_modules
+**/CODEOWNERS
+core/vendor
+coverage
+# e2e
+packages/dbsaicle-sdk

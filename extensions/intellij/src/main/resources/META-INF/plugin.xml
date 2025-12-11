@@ -1,0 +1,185 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.github.dbsaicledev.dbsaicleintellijextension</id>
+    <name>DbSaicle</name>
+    <vendor url="https://www.db.com/">dbsaicle-dev</vendor>
+    <change-notes>
+        <![CDATA[View the latest release notes on <a href="https://github.com/dbsaicledev/dbsaicle/releases">GitHub</a>]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+
+    <!-- See here for why this is optional:  https://github.com/dbsaicledev/continue/issues/2775#issuecomment-2535620877-->
+    <depends optional="true" config-file="dbsaicleintellijextension-withJSON.xml">
+        com.intellij.modules.json
+    </depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="DbSaicle" anchor="right" icon="com.github.dbsaicledev.dbsaicleintellijextension.Icons.DbSaicle"
+                    factoryClass="com.github.dbsaicledev.dbsaicleintellijextension.toolWindow.DbSaiclePluginToolWindowFactory"/>
+        <projectService id="DbSaiclePluginService"
+                        serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.services.DbSaiclePluginService"/>
+        <projectService
+                id="DiffStreamService"
+                serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.editor.DiffStreamService"/>
+
+        <projectService serviceInterface="com.github.dbsaicledev.dbsaicleintellijextension.autocomplete.CompletionService"
+                        serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.autocomplete.DbSaicleCompletionService"/>
+        <projectService
+                serviceInterface="com.github.dbsaicledev.dbsaicleintellijextension.nextEdit.NextEditService"
+                serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.nextEdit.DbSaicleNextEditService"/>
+
+        <projectService
+                serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.nextEdit.NextEditWindowManager"/>
+
+        <projectService
+                serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.nextEdit.NextEditJumpManager"/>
+
+        <inline.completion.provider id="DbSaicle" implementation="com.github.dbsaicledev.dbsaicleintellijextension.autocomplete.DbSaicleInlineCompletionProvider"/>
+        
+        <notificationGroup id="DbSaicle"
+                           displayType="BALLOON"/>
+        <actionPromoter order="last"
+                        implementation="com.github.dbsaicledev.dbsaicleintellijextension.actions.DbSaicleActionPromote"/>
+        <errorHandler implementation="com.github.dbsaicledev.dbsaicleintellijextension.error.DbSaicleErrorSubmitter"/>
+        <postStartupActivity
+                implementation="com.github.dbsaicledev.dbsaicleintellijextension.activities.DbSaiclePluginStartupActivity"/>
+        <postStartupActivity implementation="com.github.dbsaicledev.dbsaicleintellijextension.proxy.ProxyPoolingActivity"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.github.dbsaicledev.dbsaicleintellijextension.services.DbSaicleExtensionConfigurable"
+                id="com.github.dbsaicledev.dbsaicleintellijextension.services.DbSaicleExtensionConfigurable"
+                displayName="DbSaicle"/>
+        <applicationService
+                serviceImplementation="com.github.dbsaicledev.dbsaicleintellijextension.services.DbSaicleExtensionSettings"/>
+    </extensions>
+
+    <actions>
+        <action class="com.github.dbsaicledev.dbsaicleintellijextension.editor.InlineEditAction"
+                id="dbsaicle.inlineEdit"
+                description="Inline Edit"
+                text="Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta I"/>
+            <override-text place="GoToAction" text="DbSaicle: Edit Code"/>
+        </action>
+
+        <action id="dbsaicle.acceptDiff"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl ENTER"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta ENTER"/>
+            <override-text place="GoToAction" text="DbSaicle: Accept Diff"/>
+        </action>
+
+        <action id="dbsaicle.restartProcess"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.RestartDbSaicleProcess"
+                text="Restart Process"
+                description="Restart Process">
+            <override-text place="GoToAction" text="DbSaicle: Restart Process"/>
+        </action>
+
+        <action id="dbsaicle.rejectDiff"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl BACK_SPACE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta BACK_SPACE"/>
+            <override-text place="GoToAction" text="DbSaicle: Reject Diff"/>
+        </action>
+
+        <action id="dbsaicle.acceptVerticalDiffBlock"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift Y"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift Y"/>
+            <override-text place="GoToAction" text="DbSaicle: Accept Vertical Diff Block"/>
+        </action>
+
+        <action id="dbsaicle.rejectVerticalDiffBlock"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift N"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift N"/>
+            <override-text place="GoToAction" text="DbSaicle: Reject Vertical Diff Block"/>
+        </action>
+
+        <action id="dbsaicle.addLicenseKey"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.license.AddLicenseKey"
+                text="Enter Enterprise License Key"
+                description="Enter Enterprise License Key">
+            <override-text place="GoToAction" text="DbSaicle: Enter Enterprise License Key"/>
+        </action>
+
+        <action id="dbsaicle.focusDbSaicleInputWithoutClear"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.FocusDbSaicleInputWithoutClearAction"
+                text="Add selected code to context"
+                description="Focus DbSaicle Input With Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift J"/>
+            <override-text place="GoToAction" text="DbSaicle: Add Highlighted Code to Context"/>
+        </action>
+
+        <action id="dbsaicle.newDbSaicleSession"
+                icon="AllIcons.General.Add"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.NewDbSaicleSessionAction"
+                text="New Session"
+                description="New Session">
+
+            <override-text place="GoToAction" text="New Session"/>
+        </action>
+
+        <action id="dbsaicle.viewHistory"
+                icon="AllIcons.Vcs.History"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.ViewHistoryAction"
+                text="View History"
+                description="View History">
+            <override-text place="GoToAction" text="View History"/>
+        </action>
+
+        <action id="dbsaicle.openConfigPage"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.OpenConfigAction"
+                icon="AllIcons.General.GearPlain"
+                text="Settings"
+                description="Settings">
+            <override-text place="GoToAction" text="Settings"/>
+        </action>
+
+        <action id="dbsaicle.openLogs"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.OpenLogsAction"
+                icon="AllIcons.General.ShowInfos"
+                text="Open Logs"
+                description="Open DbSaicle Logs">
+            <override-text place="GoToAction" text="Open DbSaicle Logs"/>
+        </action>
+
+        <group id="DbSaicleSidebarActionsGroup">
+            <reference ref="dbsaicle.newDbSaicleSession"/>
+            <reference ref="dbsaicle.viewHistory"/>
+            <reference ref="dbsaicle.openConfigPage"/>
+        </group>
+
+        <action id="dbsaicle.focusDbSaicleInput"
+                class="com.github.dbsaicledev.dbsaicleintellijextension.actions.FocusDbSaicleInputAction"
+                text="Add selected code to context"
+                description="Focus DbSaicle Input">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta J"/>
+            <add-to-group group-id="EditorPopupMenu"/>
+            <override-text place="GoToAction" text="DbSaicle: Add Highlighted Code to Context and Clear Chat"/>
+        </action>
+    </actions>
+</idea-plugin>

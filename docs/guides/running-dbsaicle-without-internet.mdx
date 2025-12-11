@@ -1,0 +1,9 @@
+---
+title: "How to Run DbSaicle Without Internet"
+description: "Learn how to set up DbSaicle for air-gapped or offline environments using local models, including steps to disable telemetry and configure local model providers"
+---
+
+1. Download the latest .vsix file from the onedrive link.
+2. Turn off "Allow Anonymous Telemetry" in the user settings. This will stop DbSaicle from attempting requests to PostHog for [anonymous telemetry](https://docs.dbsaicle.dev/reference/telemetry).
+3. In your `config.yaml` file (or through the DbSaicle UI), set the default model to a local model. You can find available local model options.
+4. Restart VS Code to ensure that the changes to `config.yaml` take effect.

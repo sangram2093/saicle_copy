@@ -135,6 +135,17 @@ export class BrowserController implements vscode.Disposable {
       defaultViewport: this.viewport,
     };
 
+    const envPath =
+      process.env.PUPPETEER_EXECUTABLE_PATH ?? process.env.CHROME_PATH;
+    if (envPath) {
+      if (await this.pathExists(envPath)) {
+        return { ...baseOptions, executablePath: envPath };
+      }
+      throw new Error(
+        `PUPPETEER_EXECUTABLE_PATH was set but not found at: ${envPath}`,
+      );
+    }
+
     const exe = stats.executablePath;
     if (exe && (await this.pathExists(exe))) {
       return { ...baseOptions, executablePath: exe };

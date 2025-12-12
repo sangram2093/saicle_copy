@@ -27,15 +27,17 @@ export class BrowserController implements vscode.Disposable {
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   async launch(url: string): Promise<BrowserSnapshot> {
-    await this.ensureChromium();
     await this.disposeBrowser();
 
     const stats = await this.ensureChromium();
-    this.browser = await stats.puppeteer.launch({
-      headless: true,
-      executablePath: stats.executablePath,
-      defaultViewport: this.viewport,
-    });
+    const launchOptions = await this.getLaunchOptions(stats);
+    try {
+      this.browser = await stats.puppeteer.launch(launchOptions);
+    } catch (error) {
+      const hint =
+        "Failed to start Chromium. Try running the DbSaicle: Reset Browser command or ensure Chrome is installed and accessible.";
+      throw new Error(`${(error as Error).message}\n\n${hint}`);
+    }
 
     this.page = await this.browser.newPage();
     this.logs = [];
@@ -123,6 +125,32 @@ export class BrowserController implements vscode.Disposable {
     });
 
     return this.resolverStats;
+  }
+
+  private async getLaunchOptions(
+    stats: ResolverStats,
+  ): Promise<Parameters<ResolverStats["puppeteer"]["launch"]>[0]> {
+    const baseOptions: Parameters<ResolverStats["puppeteer"]["launch"]>[0] = {
+      headless: true,
+      defaultViewport: this.viewport,
+    };
+
+    const exe = stats.executablePath;
+    if (exe && (await this.pathExists(exe))) {
+      return { ...baseOptions, executablePath: exe };
+    }
+
+    // Fallback: use installed Chrome channel if resolver didn't provide a path.
+    return { ...baseOptions, channel: "chrome" };
+  }
+
+  private async pathExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private requirePage(): Page {

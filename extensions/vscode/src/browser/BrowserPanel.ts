@@ -279,6 +279,44 @@ export class BrowserPanel {
             let currentViewport = { width: 900, height: 600 };
             let lastUrl = "";
 
+            function toBase64FromBytes(bytes) {
+              if (!bytes) return null;
+              const arr = ArrayBuffer.isView(bytes)
+                ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+                : Array.isArray(bytes)
+                  ? Uint8Array.from(bytes)
+                  : null;
+              if (!arr) return null;
+              let binary = "";
+              const chunk = 0x8000;
+              for (let i = 0; i < arr.length; i += chunk) {
+                binary += String.fromCharCode(...arr.subarray(i, i + chunk));
+              }
+              return btoa(binary);
+            }
+
+            function normalizeScreenshot(raw) {
+              if (!raw) return null;
+              if (typeof raw === "string") {
+                if (raw.startsWith("data:image/")) return raw;
+                // Handle accidental numeric array string like "82,73,..."
+                const numericParts = raw.split(",").map((p) => Number(p.trim()));
+                if (numericParts.every((n) => Number.isFinite(n) && n >= 0 && n <= 255)) {
+                  const b64 = toBase64FromBytes(numericParts);
+                  return b64 ? \`data:image/webp;base64,\${b64}\` : null;
+                }
+                return raw;
+              }
+              const data = Array.isArray(raw)
+                ? raw
+                : raw?.data ?? (ArrayBuffer.isView(raw) ? new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength) : null);
+              if (data) {
+                const b64 = toBase64FromBytes(data);
+                return b64 ? \`data:image/webp;base64,\${b64}\` : null;
+              }
+              return null;
+            }
+
             function setStatus(message) {
               statusEl.textContent = message;
             }
@@ -351,8 +389,9 @@ export class BrowserPanel {
                     lastUrl = payload.url;
                     urlInput.value = payload.url;
                   }
-                  if (payload.screenshot) {
-                    screenshotEl.src = payload.screenshot;
+                  const normalizedScreenshot = normalizeScreenshot(payload.screenshot);
+                  if (normalizedScreenshot) {
+                    screenshotEl.src = normalizedScreenshot;
                   } else {
                     screenshotEl.removeAttribute("src");
                   }

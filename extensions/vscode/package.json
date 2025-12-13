@@ -593,7 +593,7 @@
         {
           "id": "dbsaicle",
           "title": "DbSaicle",
-          "icon": "media/sidebar-icon.png"
+          "icon": "media/sidebar-icon.svg"
         }
       ],
       "panel": [
@@ -610,7 +610,7 @@
           "type": "webview",
           "id": "dbsaicle.dbsaicleGUIView",
           "name": "DbSaicle",
-          "icon": "media/sidebar-icon.png",
+          "icon": "media/sidebar-icon.svg",
           "visibility": "visible"
         }
       ],

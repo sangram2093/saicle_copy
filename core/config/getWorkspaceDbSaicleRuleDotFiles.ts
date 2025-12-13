@@ -29,8 +29,34 @@ export async function getWorkspaceDbSaicleRuleDotFiles(ide: IDE) {
 
     // Load all .md files from .dbsaicle/rules folder
     try {
+      // Check if .dbsaicle folder exists
+      const dbSaicleFolder = joinPathsToUri(dir, ".dbsaicle");
+      const dbSaicleExists = await ide.fileExists(dbSaicleFolder);
+
+      if (!dbSaicleExists) {
+        // Skip loading if .dbsaicle folder doesn't exist
+        continue;
+      }
+
+      // Check if .dbsaicle/rules folder exists
       const rulesFolder = joinPathsToUri(dir, ".dbsaicle", "rules");
+      const rulesFolderExists = await ide.fileExists(rulesFolder);
+
+      if (!rulesFolderExists) {
+        // Skip loading if rules folder doesn't exist
+        continue;
+      }
+
       const filesList = await ide.listDir(rulesFolder);
+
+      // Check if there are any .md files in the rules folder
+      const hasMdFiles =
+        filesList && filesList.some(([fileName]) => fileName.endsWith(".md"));
+
+      if (!hasMdFiles) {
+        // Skip loading if no .md files found
+        continue;
+      }
 
       if (filesList && filesList.length > 0) {
         for (const [fileName, fileType] of filesList) {

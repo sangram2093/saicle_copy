@@ -364,6 +364,7 @@ export async function unrollBlocks(
     name: assistant.name,
     version: assistant.version,
     jira: assistant.jira,
+    confluence: assistant.confluence,
   };
 
   const sections: (keyof Omit<

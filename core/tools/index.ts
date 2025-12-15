@@ -53,6 +53,15 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.jiraGetFixVersionsTool,
   toolDefinitions.jiraGetProjectVersionsTool,
   toolDefinitions.jiraSetFixVersionsTool,
+  toolDefinitions.confluenceAddDiagramTool,
+  toolDefinitions.confluenceAddPageLabelTool,
+  toolDefinitions.confluenceCreatePageTool,
+  toolDefinitions.confluenceGetPageContentTool,
+  toolDefinitions.confluenceGetPageDetailsTool,
+  toolDefinitions.confluenceGetSpaceDetailsTool,
+  toolDefinitions.confluenceListPagesTool,
+  toolDefinitions.confluenceModifyPageContentTool,
+  toolDefinitions.confluenceSearchCQLTool,
 ];
 
 export const getConfigDependentToolDefinitions = (

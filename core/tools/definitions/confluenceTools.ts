@@ -1,8 +1,12 @@
 import { Tool } from "../..";
-import { BuiltInToolNames } from "../builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 const confluenceBase: Partial<Tool> = {
-  faviconUrl: "https://www.atlassian.com/favicon.ico",
+  type: "function",
+  readonly: false,
+  isInstant: false,
+  group: BUILT_IN_GROUP_NAME,
+  defaultToolPolicy: "allowedWithPermission",
 };
 
 export const confluenceSearchCQLTool: Tool = {

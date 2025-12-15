@@ -68,10 +68,12 @@ function getConfluenceConfig(config: any) {
 
 // Helper to build Authorization header
 function buildAuthHeader(userEmail: string, apiToken: string): string {
-  const credentials = Buffer.from(`${userEmail}:${apiToken}`).toString(
-    "base64",
-  );
-  return `Basic ${credentials}`;
+  // const credentials = Buffer.from(`${userEmail}:${apiToken}`).toString(
+  //   "base64",
+  // );
+  // return `Basic ${credentials}`;
+  const authHeader = `Bearer ${Buffer.from(`${apiToken}`)}`;
+  return authHeader;
 }
 
 // Helper to fetch from Confluence API

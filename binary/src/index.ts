@@ -1,4 +1,6 @@
 process.env.IS_BINARY = "true";
+// Set NODE_TLS_REJECT_UNAUTHORIZED to 0 for Confluence API calls
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import { Command } from "commander";
 import { Core } from "core/core";
 import { LLMLogFormatter } from "core/llm/logFormatter";

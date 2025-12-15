@@ -4,6 +4,7 @@ import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
+import { browserActionImpl } from "./implementations/browserAction";
 import { codebaseToolImpl } from "./implementations/codebaseTool";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { createRuleBlockImpl } from "./implementations/createRuleBlock";
@@ -11,7 +12,6 @@ import { fetchUrlContentImpl } from "./implementations/fetchUrlContent";
 import { fileGlobSearchImpl } from "./implementations/globSearch";
 import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
-import { browserActionImpl } from "./implementations/browserAction";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 
@@ -24,6 +24,10 @@ import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
 import { safeParseToolCallArgs } from "./parseArgs";
 
+import {
+  handleConfluenceMutatingTools,
+  handleConfluenceQueryTools,
+} from "./implementations/confluenceToolImpl";
 import { fetchUrlChunkImpl } from "./implementations/fetchUrlChunk";
 import {
   handleJiraCreateTools,
@@ -186,6 +190,23 @@ export async function callBuiltInTool(
     BuiltInToolNames.JiraSetDependency,
   ]);
 
+  // Delegate Confluence tools to specialized handlers
+  const readConfluenceTools = new Set<BuiltInToolNames>([
+    BuiltInToolNames.ConfluenceSearchCQL,
+    BuiltInToolNames.ConfluenceListSpaces,
+    BuiltInToolNames.ConfluenceGetSpaceDetails,
+    BuiltInToolNames.ConfluenceListPages,
+    BuiltInToolNames.ConfluenceGetPageDetails,
+    BuiltInToolNames.ConfluenceGetPageContent,
+  ]);
+
+  const mutatingConfluenceTools = new Set<BuiltInToolNames>([
+    BuiltInToolNames.ConfluenceCreatePage,
+    BuiltInToolNames.ConfluenceAddDiagram,
+    BuiltInToolNames.ConfluenceModifyPageContent,
+    BuiltInToolNames.ConfluenceAddPageLabel,
+  ]);
+
   if (readJiraTools.has(fn)) {
     return await handleJiraQueryTools(fn, args, extras);
   }
@@ -194,6 +215,12 @@ export async function callBuiltInTool(
   }
   if (fn.toString().startsWith("jira_")) {
     return await handleJiraMutatingTools(fn, args, extras);
+  }
+  if (readConfluenceTools.has(fn)) {
+    return await handleConfluenceQueryTools(fn, args, extras);
+  }
+  if (mutatingConfluenceTools.has(fn)) {
+    return await handleConfluenceMutatingTools(fn, args, extras);
   }
 
   switch (functionName) {

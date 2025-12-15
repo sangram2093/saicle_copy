@@ -103,6 +103,12 @@ export const jiraSchema = z.object({
   authEmail: z.string(),
 });
 
+export const confluenceSchema = z.object({
+  confluenceBaseUrl: z.string().default("https://confluence.intranet.db.com/"),
+  userEmail: z.string(),
+  apiToken: z.string(),
+});
+
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
   sourceCodeUrl: z.string().optional(),
@@ -124,6 +130,7 @@ export const baseConfigYamlSchema = z.object({
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
   env: envRecord.optional(),
   jira: jiraSchema.optional(),
+  confluence: confluenceSchema.optional(),
 });
 
 const modelsUsesSchema = z

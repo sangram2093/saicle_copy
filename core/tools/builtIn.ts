@@ -59,6 +59,18 @@ export enum BuiltInToolNames {
   JiraSetFixVersions = "jira_setFixVersionsForJiraIssue",
   JiraMarkStartOfActivity = "jira_markStartOfActivity",
   JiraMarkActivityCompleted = "jira_markActivityCompleted",
+
+  // Confluence tools
+  ConfluenceSearchCQL = "confluence_searchCQL",
+  ConfluenceListSpaces = "confluence_listSpaces",
+  ConfluenceGetSpaceDetails = "confluence_getSpaceDetails",
+  ConfluenceListPages = "confluence_listPages",
+  ConfluenceGetPageDetails = "confluence_getPageDetails",
+  ConfluenceGetPageContent = "confluence_getPageContent",
+  ConfluenceCreatePage = "confluence_createPage",
+  ConfluenceAddDiagram = "confluence_addDiagram",
+  ConfluenceModifyPageContent = "confluence_modifyPageContent",
+  ConfluenceAddPageLabel = "confluence_addPageLabel",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

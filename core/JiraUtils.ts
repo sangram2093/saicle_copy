@@ -183,6 +183,29 @@ class JiraClient {
     return issueData.fields.labels;
   }
 
+  async ensureLabelOnIssue(issueKey: string): Promise<boolean> {
+    const DB_AI_LABEL = "db_ai_in_use";
+    try {
+      const currentLabels = await this.getJiraLabels(issueKey);
+      const labels = currentLabels ?? [];
+
+      // Check if label already exists
+      if (labels.includes(DB_AI_LABEL)) {
+        console.log(
+          `Label '${DB_AI_LABEL}' already exists on issue ${issueKey}`,
+        );
+        return true;
+      }
+
+      // Add the label
+      labels.push(DB_AI_LABEL);
+      return await this.setJiraLabels(issueKey, labels);
+    } catch (error) {
+      console.error(`Failed to ensure label on issue ${issueKey}:`, error);
+      return false;
+    }
+  }
+
   async setJiraLabels(issueKey: string, labels: string[]): Promise<boolean> {
     const url = `/rest/api/2/issue/${issueKey}`;
     const bodyData = {
@@ -1198,6 +1221,20 @@ export async function jira_transitionJiraIssue(
   return await client.transitionJiraIssue(issueKey, transitionName);
 }
 
+async function ensureLabelOnIssue(
+  issueKey: string,
+  config?: any,
+): Promise<boolean> {
+  const { domain, apiToken } = resolveJiraConfigFromOptionalSource(config);
+  if (!domain || !apiToken) {
+    throw new Error(
+      "Jira configuration missing: jira_domain and jira_api_token are required",
+    );
+  }
+  const client = new JiraClient(domain, apiToken);
+  return await client.ensureLabelOnIssue(issueKey);
+}
+
 export async function jira_addWorklog(
   issueKey: string,
   timeSpent: string,
@@ -1211,7 +1248,11 @@ export async function jira_addWorklog(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.addWorklog(issueKey, timeSpent, comment);
+  const result = await client.addWorklog(issueKey, timeSpent, comment);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_addComment(
@@ -1226,7 +1267,11 @@ export async function jira_addComment(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.addComment(issueKey, comment);
+  const result = await client.addComment(issueKey, comment);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_assignUser(
@@ -1241,7 +1286,11 @@ export async function jira_assignUser(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.assignUser(issueKey, username);
+  const result = await client.assignUser(issueKey, username);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getLastWorklog(issueKey: string, config?: any) {
@@ -1293,7 +1342,11 @@ export async function jira_setJiraDescriptionText(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setJiraDescriptionText(issueKey, description);
+  const result = await client.setJiraDescriptionText(issueKey, description);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getJiraLabels(issueKey: string, config?: any) {
@@ -1334,7 +1387,11 @@ export async function jira_setJiraActivityType(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setJiraActivityType(issueKey, activityTypeName);
+  const result = await client.setJiraActivityType(issueKey, activityTypeName);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_createEpic(
@@ -1351,7 +1408,16 @@ export async function jira_createEpic(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.createEpic(projectKey, summary, description, epicName);
+  const issueKey = await client.createEpic(
+    projectKey,
+    summary,
+    description,
+    epicName,
+  );
+  if (issueKey) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return issueKey;
 }
 
 export async function jira_createFeature(
@@ -1368,7 +1434,16 @@ export async function jira_createFeature(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.createFeature(projectKey, summary, description, epicLink);
+  const issueKey = await client.createFeature(
+    projectKey,
+    summary,
+    description,
+    epicLink,
+  );
+  if (issueKey) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return issueKey;
 }
 
 export async function jira_createStory(
@@ -1384,7 +1459,11 @@ export async function jira_createStory(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.createStory(projectKey, summary, description);
+  const issueKey = await client.createStory(projectKey, summary, description);
+  if (issueKey) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return issueKey;
 }
 
 export async function jira_createSubtask(
@@ -1402,13 +1481,17 @@ export async function jira_createSubtask(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.createSubtask(
+  const issueKey = await client.createSubtask(
     projectKey,
     parentKey,
     summary,
     description,
     activityType,
   );
+  if (issueKey) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return issueKey;
 }
 
 export async function jira_searchJiraIssuesWithJql(jql: string, config?: any) {
@@ -1435,11 +1518,17 @@ export async function jira_setJiraDependency(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setJiraDependency(
+  const result = await client.setJiraDependency(
     inwardIssueKey,
     outwardIssueKey,
     linkType,
   );
+  if (result) {
+    // Add label to both inward and outward issues
+    await ensureLabelOnIssue(inwardIssueKey, config);
+    await ensureLabelOnIssue(outwardIssueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getIssueAttachments(issueKey: string, config?: any) {
@@ -1487,7 +1576,11 @@ export async function jira_addAttachment(
     filepath = path.join(workspaceDirs[0], filepath);
   }
 
-  return await client.addAttachment(issueKey, filepath);
+  const result = await client.addAttachment(issueKey, filepath);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, extras.config);
+  }
+  return result;
 }
 
 export async function jira_getDueDate(issueKey: string, config?: any) {
@@ -1513,7 +1606,11 @@ export async function jira_setDueDate(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setDueDate(issueKey, dueDate);
+  const result = await client.setDueDate(issueKey, dueDate);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getPlannedStartDate(issueKey: string, config?: any) {
@@ -1539,7 +1636,11 @@ export async function jira_setPlannedStartDate(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setPlannedStartDate(issueKey, startDate);
+  const result = await client.setPlannedStartDate(issueKey, startDate);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getPlannedEndDate(issueKey: string, config?: any) {
@@ -1565,7 +1666,11 @@ export async function jira_setPlannedEndDate(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setPlannedEndDate(issueKey, endDate);
+  const result = await client.setPlannedEndDate(issueKey, endDate);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getAcceptanceCriteria(
@@ -1594,7 +1699,11 @@ export async function jira_setAcceptanceCriteria(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setAcceptanceCriteria(issueKey, criteria);
+  const result = await client.setAcceptanceCriteria(issueKey, criteria);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_getFixVersionsForJiraIssue(
@@ -1637,7 +1746,14 @@ export async function jira_setFixVersionsForJiraIssue(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.setFixVersionsForJiraIssue(issueKey, versionNames);
+  const result = await client.setFixVersionsForJiraIssue(
+    issueKey,
+    versionNames,
+  );
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_markActivityCompleted(
@@ -1652,7 +1768,11 @@ export async function jira_markActivityCompleted(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.markActivityCompleted(issueKey, activityName);
+  const result = await client.markActivityCompleted(issueKey, activityName);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export async function jira_markStartOfActivity(
@@ -1667,7 +1787,11 @@ export async function jira_markStartOfActivity(
     );
   }
   const client = new JiraClient(domain, apiToken);
-  return await client.markStartOfActivity(issueKey, activityName);
+  const result = await client.markStartOfActivity(issueKey, activityName);
+  if (result) {
+    await ensureLabelOnIssue(issueKey, config);
+  }
+  return result;
 }
 
 export function isoToJiraDateTime(isoDate: string | Date): string | null {

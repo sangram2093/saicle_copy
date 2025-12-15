@@ -1,3 +1,4 @@
+export { browserActionTool } from "./browserAction";
 export { codebaseTool } from "./codebaseTool";
 export { createNewFileTool } from "./createNewFile";
 export { createRuleBlock } from "./createRuleBlock";
@@ -9,8 +10,19 @@ export { lsTool } from "./ls";
 export { multiEditTool } from "./multiEdit";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";
-export { browserActionTool } from "./browserAction";
 
+export {
+  confluenceAddDiagramTool,
+  confluenceAddPageLabelTool,
+  confluenceCreatePageTool,
+  confluenceGetPageContentTool,
+  confluenceGetPageDetailsTool,
+  confluenceGetSpaceDetailsTool,
+  confluenceListPagesTool,
+  confluenceListSpacesTool,
+  confluenceModifyPageContentTool,
+  confluenceSearchCQLTool,
+} from "./confluenceTools";
 export { fetchUrlChunkTool } from "./fetchUrlChunk";
 export {
   jiraAddAttachmentTool,

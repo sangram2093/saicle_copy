@@ -411,23 +411,9 @@ async function configYamlToDbSaicleConfig(options: {
   localErrors.push(...contextErrors);
 
   // Extract optional Jira configuration from the unrolled YAML and attach to the runtime config
-  try {
-    const jiraCfg = extractOptionalJiraConfig(config);
-    if (jiraCfg && (jiraCfg.domain || jiraCfg.apiToken || jiraCfg.authEmail)) {
-      dbsaicleConfig.jira = jiraCfg;
-      // warn if incomplete
-      if (!jiraCfg.domain || !jiraCfg.apiToken || !jiraCfg.authEmail) {
-        localErrors.push({
-          fatal: false,
-          message:
-            "Partial Jira configuration found in config.yaml â€” provide a root `jira` block with `domain`, `apiToken`, and `authEmail` for full functionality (or set the equivalent env vars).",
-        });
-      }
-    }
-  } catch (e) {
-    // ignore extraction errors
-  }
-
+  extractJiraConfigInFlow(config, dbsaicleConfig, localErrors);
+  // Extract optional confluence configuration from the unrolled YAML and attach to the runtime config
+  extractConfluenceConfigInFlow(config, dbsaicleConfig, localErrors);
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
   const orgPolicy = PolicySingleton.getInstance().policy;
@@ -452,6 +438,867 @@ async function configYamlToDbSaicleConfig(options: {
   }
 
   return { config: dbsaicleConfig, errors: localErrors };
+}
+
+function extractJiraConfigInFlow(
+  config: {
+    name: string;
+    version: string;
+    env?: Record<string, string | number | boolean> | undefined;
+    schema?: string | undefined;
+    rules?:
+      | (
+          | string
+          | {
+              name: string;
+              rule: string;
+              regex?: string | string[] | undefined;
+              sourceFile?: string | undefined;
+              description?: string | undefined;
+              globs?: string | string[] | undefined;
+              alwaysApply?: boolean | undefined;
+              invokable?: boolean | undefined;
+            }
+        )[]
+      | undefined;
+    context?:
+      | { provider: string; params?: any; name?: string | undefined }[]
+      | undefined;
+    metadata?:
+      | (Record<string, string> & {
+          description?: string | undefined;
+          author?: string | undefined;
+          license?: string | undefined;
+          tags?: string | undefined;
+          sourceCodeUrl?: string | undefined;
+          iconUrl?: string | undefined;
+        })
+      | undefined;
+    jira?: { domain: string; apiToken: string; authEmail: string } | undefined;
+    confluence?:
+      | { apiToken: string; confluenceBaseUrl: string; userEmail: string }
+      | undefined;
+    models?:
+      | (
+          | {
+              provider: "dbsaicle-proxy";
+              orgScopeId: string | null;
+              onPremProxyUrl: string | null;
+              name: string;
+              model: string;
+              apiKeyLocation?: string | undefined;
+              envSecretLocations?: Record<string, string> | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              provider: string;
+              name: string;
+              model: string;
+              email?: string | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+              sourceFile?: string | undefined;
+              region?: string | undefined;
+              projectId?: string | undefined;
+              keyfile_json_path?: string | undefined;
+              wif_json_path?: string | undefined;
+              dbllm_apikey?: string | undefined;
+              data_classification?: string | undefined;
+              dbllm_urlendpoint?: string | undefined;
+              kannon_id?: string | undefined;
+            }
+        )[]
+      | undefined;
+    data?:
+      | {
+          name: string;
+          schema: string;
+          destination: string;
+          apiKey?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          level?: "all" | "noCode" | undefined;
+          events?: string[] | undefined;
+        }[]
+      | undefined;
+    mcpServers?:
+      | {
+          name: string;
+          type?: "sse" | "stdio" | "streamable-http" | undefined;
+          url?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          env?: Record<string, string> | undefined;
+          sourceFile?: string | undefined;
+          command?: string | undefined;
+          faviconUrl?: string | undefined;
+          args?: string[] | undefined;
+          cwd?: string | undefined;
+          connectionTimeout?: number | undefined;
+        }[]
+      | undefined;
+    prompts?:
+      | {
+          name: string;
+          prompt: string;
+          sourceFile?: string | undefined;
+          description?: string | undefined;
+        }[]
+      | undefined;
+    docs?:
+      | {
+          name: string;
+          startUrl: string;
+          sourceFile?: string | undefined;
+          faviconUrl?: string | undefined;
+          rootUrl?: string | undefined;
+          useLocalCrawling?: boolean | undefined;
+        }[]
+      | undefined;
+  },
+  dbsaicleConfig: DbSaicleConfig,
+  localErrors: ConfigValidationError[],
+) {
+  try {
+    const jiraCfg = extractOptionalJiraConfig(config);
+    if (jiraCfg && (jiraCfg.domain || jiraCfg.apiToken || jiraCfg.authEmail)) {
+      dbsaicleConfig.jira = jiraCfg;
+      // warn if incomplete
+      if (!jiraCfg.domain || !jiraCfg.apiToken || !jiraCfg.authEmail) {
+        localErrors.push({
+          fatal: false,
+          message:
+            "Partial Jira configuration found in config.yaml â€” provide a root `jira` block with `domain`, `apiToken`, and `authEmail` for full functionality (or set the equivalent env vars).",
+        });
+      }
+    }
+  } catch (e) {
+    // ignore extraction errors
+  }
+}
+
+function extractConfluenceConfigInFlow(
+  config: {
+    name: string;
+    version: string;
+    env?: Record<string, string | number | boolean> | undefined;
+    schema?: string | undefined;
+    rules?:
+      | (
+          | string
+          | {
+              name: string;
+              rule: string;
+              regex?: string | string[] | undefined;
+              sourceFile?: string | undefined;
+              description?: string | undefined;
+              globs?: string | string[] | undefined;
+              alwaysApply?: boolean | undefined;
+              invokable?: boolean | undefined;
+            }
+        )[]
+      | undefined;
+    context?:
+      | { provider: string; params?: any; name?: string | undefined }[]
+      | undefined;
+    metadata?:
+      | (Record<string, string> & {
+          description?: string | undefined;
+          author?: string | undefined;
+          license?: string | undefined;
+          tags?: string | undefined;
+          sourceCodeUrl?: string | undefined;
+          iconUrl?: string | undefined;
+        })
+      | undefined;
+    jira?: { domain: string; apiToken: string; authEmail: string } | undefined;
+    confluence?:
+      | { apiToken: string; confluenceBaseUrl: string; userEmail: string }
+      | undefined;
+    models?:
+      | (
+          | {
+              provider: "dbsaicle-proxy";
+              orgScopeId: string | null;
+              onPremProxyUrl: string | null;
+              name: string;
+              model: string;
+              apiKeyLocation?: string | undefined;
+              envSecretLocations?: Record<string, string> | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              provider: string;
+              name: string;
+              model: string;
+              email?: string | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+              sourceFile?: string | undefined;
+              region?: string | undefined;
+              projectId?: string | undefined;
+              keyfile_json_path?: string | undefined;
+              wif_json_path?: string | undefined;
+              dbllm_apikey?: string | undefined;
+              data_classification?: string | undefined;
+              dbllm_urlendpoint?: string | undefined;
+              kannon_id?: string | undefined;
+            }
+        )[]
+      | undefined;
+    data?:
+      | {
+          name: string;
+          schema: string;
+          destination: string;
+          apiKey?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          level?: "all" | "noCode" | undefined;
+          events?: string[] | undefined;
+        }[]
+      | undefined;
+    mcpServers?:
+      | {
+          name: string;
+          type?: "sse" | "stdio" | "streamable-http" | undefined;
+          url?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          env?: Record<string, string> | undefined;
+          sourceFile?: string | undefined;
+          command?: string | undefined;
+          faviconUrl?: string | undefined;
+          args?: string[] | undefined;
+          cwd?: string | undefined;
+          connectionTimeout?: number | undefined;
+        }[]
+      | undefined;
+    prompts?:
+      | {
+          name: string;
+          prompt: string;
+          sourceFile?: string | undefined;
+          description?: string | undefined;
+        }[]
+      | undefined;
+    docs?:
+      | {
+          name: string;
+          startUrl: string;
+          sourceFile?: string | undefined;
+          faviconUrl?: string | undefined;
+          rootUrl?: string | undefined;
+          useLocalCrawling?: boolean | undefined;
+        }[]
+      | undefined;
+  },
+  dbsaicleConfig: DbSaicleConfig,
+  localErrors: ConfigValidationError[],
+) {
+  try {
+    const confluenceCfg = extractOptionalConfluenceConfig(config);
+    if (
+      confluenceCfg &&
+      (confluenceCfg.confluenceBaseUrl ||
+        confluenceCfg.apiToken ||
+        confluenceCfg.userEmail)
+    ) {
+      dbsaicleConfig.confluence = confluenceCfg;
+      // warn if incomplete
+      if (
+        !confluenceCfg.confluenceBaseUrl ||
+        !confluenceCfg.apiToken ||
+        !confluenceCfg.userEmail
+      ) {
+        localErrors.push({
+          fatal: false,
+          message:
+            "Partial Confluence configuration found in config.yaml â€” provide a root `confluence` block with `baseUrl`, `apiToken`, and `authEmail` for full functionality (or set the equivalent env vars).",
+        });
+      }
+    }
+  } catch (e) {
+    // ignore extraction errors
+  }
 }
 
 function extractOptionalJiraConfig(config: AssistantUnrolled) {
@@ -510,6 +1357,68 @@ function extractOptionalJiraConfig(config: AssistantUnrolled) {
   }
 
   return jira;
+}
+
+function extractOptionalConfluenceConfig(config: AssistantUnrolled) {
+  // Prefer a root `confluence` object in the YAML:
+  // confluence:
+  //   baseUrl: https://yourcompany.atlassian.net/wiki
+  //   apiToken: <token>
+  //   authEmail: user@example.com
+  const confluence: {
+    confluenceBaseUrl?: string;
+    apiToken?: string;
+    userEmail?: string;
+  } = {};
+
+  try {
+    const asAny = config as any;
+    const confluenceBlock = asAny.confluence as
+      | { confluenceBaseUrl?: string; apiToken?: string; userEmail?: string }
+      | undefined;
+    if (confluenceBlock) {
+      if (confluenceBlock.confluenceBaseUrl)
+        confluence.confluenceBaseUrl = String(
+          confluenceBlock.confluenceBaseUrl,
+        );
+      if (confluenceBlock.apiToken)
+        confluence.apiToken = String(confluenceBlock.apiToken);
+      if (confluenceBlock.userEmail)
+        confluence.userEmail = String(confluenceBlock.userEmail);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Fallback: check top-level env map
+  try {
+    const envMap = (config as any).env as Record<string, any> | undefined;
+    if (envMap) {
+      if (!confluence.confluenceBaseUrl && envMap.CONFLUENCE_BASE_URL)
+        confluence.confluenceBaseUrl = String(envMap.CONFLUENCE_BASE_URL);
+      if (!confluence.apiToken && envMap.CONFLUENCE_API_TOKEN)
+        confluence.apiToken = String(envMap.CONFLUENCE_API_TOKEN);
+      if (!confluence.userEmail && envMap.CONFLUENCE_USER_EMAIL)
+        confluence.userEmail = String(envMap.CONFLUENCE_USER_EMAIL);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Legacy: also allow top-level scalar keys on the config (yaml authors may put these directly)
+  try {
+    const asAny = config as any;
+    if (!confluence.confluenceBaseUrl && asAny.confluence_base_url)
+      confluence.confluenceBaseUrl = String(asAny.confluence_base_url);
+    if (!confluence.apiToken && asAny.confluence_api_token)
+      confluence.apiToken = String(asAny.confluence_api_token);
+    if (!confluence.userEmail && asAny.confluence_user_email)
+      confluence.userEmail = String(asAny.confluence_user_email);
+  } catch (e) {
+    // ignore
+  }
+
+  return confluence;
 }
 
 export async function loadDbSaicleConfigFromYaml(options: {

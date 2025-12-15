@@ -1773,6 +1773,12 @@ export interface DbSaicleConfig {
     apiToken?: string;
     authEmail?: string;
   };
+  // Optional Confluence configuration from config.yaml
+  confluence?: {
+    baseUrl?: string;
+    apiToken?: string;
+    userEmail?: string;
+  };
 }
 
 export interface BrowserSerializedDbSaicleConfig {

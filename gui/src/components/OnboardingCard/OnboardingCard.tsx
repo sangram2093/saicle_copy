@@ -78,8 +78,10 @@ export function OnboardingCard({
     <ReusableCard
       showCloseButton={!isDialog && !!config.modelsByRole.chat.length}
       onClose={close}
+      contentClassName="p-0"
+      paddingClassName="p-0"
     >
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex w-full items-start justify-start">
         <OnboardingCardLanding
           onSelectConfigure={() => setActiveTab(OnboardingModes.API_KEY)}
           isDialog={isDialog}

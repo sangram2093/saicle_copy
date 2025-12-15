@@ -16,6 +16,8 @@ interface ReusableCardProps {
   showCloseButton?: boolean;
   onClose?: () => void;
   className?: string;
+  contentClassName?: string;
+  paddingClassName?: string;
   testId?: string;
 }
 
@@ -24,11 +26,13 @@ export function ReusableCard({
   showCloseButton,
   onClose,
   className = "",
+  contentClassName = "content py-2",
+  paddingClassName = "xs:py-4 xs:px-4 px-2 py-3",
   testId,
 }: ReusableCardProps) {
   return (
     <StyledCard
-      className={`xs:py-4 xs:px-4 relative px-2 py-3 ${className}`}
+      className={`${paddingClassName} relative ${className}`}
       data-testid={testId}
     >
       {showCloseButton && (
@@ -36,7 +40,7 @@ export function ReusableCard({
           <XMarkIcon className="flex h-5 w-5 hover:brightness-125" />
         </CloseButton>
       )}
-      <div className="content py-2">{children}</div>
+      <div className={contentClassName}>{children}</div>
     </StyledCard>
   );
 }

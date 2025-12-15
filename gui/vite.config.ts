@@ -14,6 +14,8 @@ export default defineConfig({
       project: "dbsaicle",
     }),
   ],
+  // Use relative paths so assets resolve correctly inside VS Code/JetBrains webviews
+  base: "./",
   build: {
     sourcemap: true,
 

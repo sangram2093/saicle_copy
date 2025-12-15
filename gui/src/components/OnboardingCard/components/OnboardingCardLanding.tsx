@@ -48,9 +48,9 @@ export function OnboardingCardLanding({
   const pastFreeTrialLimit = hasPassedFTL();
 
   return (
-    <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-center px-4 text-center">
-      <div className="xs:flex hidden">
-        <DbSaicleLogo height={75} />
+    <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-start gap-2 px-0 text-center">
+      <div className="xs:flex hidden mt-1 h-[260px] w-full items-center justify-center overflow-hidden">
+        <DbSaicleLogo height={500} width={500} />
       </div>
 
       <Button onClick={onSelectConfigure} className="w-full">

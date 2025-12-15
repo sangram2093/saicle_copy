@@ -124,7 +124,7 @@ export async function confluence_searchCQL(
   });
 
   return confluenceApiFetch(
-    `/wiki/rest/api/content/search?${params}`,
+    `/rest/api/content/search?${params}`,
     baseUrl,
     auth,
   );
@@ -143,7 +143,7 @@ export async function confluence_listSpaces(
     expand: "description.plain,icon",
   });
 
-  return confluenceApiFetch(`/wiki/rest/api/space?${params}`, baseUrl, auth);
+  return confluenceApiFetch(`/rest/api/space?${params}`, baseUrl, auth);
 }
 
 // 3. Get space details
@@ -153,7 +153,7 @@ export async function confluence_getSpaceDetails(
   auth: string,
 ): Promise<any> {
   return confluenceApiFetch(
-    `/wiki/rest/api/space/${encodeURIComponent(spaceKey)}?expand=description.plain,icon`,
+    `/rest/api/space/${encodeURIComponent(spaceKey)}?expand=description.plain,icon`,
     baseUrl,
     auth,
   );
@@ -174,7 +174,7 @@ export async function confluence_listPages(
     expand: "space,version",
   });
 
-  return confluenceApiFetch(`/wiki/rest/api/content?${params}`, baseUrl, auth);
+  return confluenceApiFetch(`/rest/api/content?${params}`, baseUrl, auth);
 }
 
 // 5. Get page details
@@ -184,7 +184,7 @@ export async function confluence_getPageDetails(
   auth: string,
 ): Promise<any> {
   return confluenceApiFetch(
-    `/wiki/rest/api/content/${pageId}?expand=space,version,body.storage`,
+    `/rest/api/content/${pageId}?expand=space,version,body.storage`,
     baseUrl,
     auth,
   );
@@ -250,7 +250,7 @@ export async function confluence_createPage(
   }
 
   const result = await confluenceApiFetch(
-    `/wiki/rest/api/content`,
+    `/rest/api/content`,
     baseUrl,
     auth,
     "POST",
@@ -296,7 +296,7 @@ ${diagramCode}
   };
 
   const result = await confluenceApiFetch(
-    `/wiki/rest/api/content/${pageId}`,
+    `/rest/api/content/${pageId}`,
     baseUrl,
     auth,
     "PUT",
@@ -333,7 +333,7 @@ export async function confluence_modifyPageContent(
   };
 
   const result = await confluenceApiFetch(
-    `/wiki/rest/api/content/${pageId}`,
+    `/rest/api/content/${pageId}`,
     baseUrl,
     auth,
     "PUT",
@@ -355,7 +355,7 @@ export async function confluence_addPageLabel(
   baseUrl: string,
   auth: string,
 ): Promise<any> {
-  const url = `/wiki/rest/api/content/${pageId}/label`;
+  const url = `/rest/api/content/${pageId}/label`;
   const body = {
     prefix: "global",
     name: label,

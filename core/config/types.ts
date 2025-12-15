@@ -802,6 +802,7 @@ declare global {
     | "problems"
     | "folder"
     | "jira"
+    | "confluence"
     | "postgres"
     | "database"
     | "code"

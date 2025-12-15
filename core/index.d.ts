@@ -994,6 +994,7 @@ export type ContextProviderName =
   | "problems"
   | "folder"
   | "jira"
+  | "confluence"
   | "postgres"
   | "database"
   | "code"

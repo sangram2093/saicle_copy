@@ -368,7 +368,14 @@ export async function unrollBlocks(
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema" | "metadata" | "env" | "jira"
+    | "name"
+    | "version"
+    | "rules"
+    | "schema"
+    | "metadata"
+    | "env"
+    | "jira"
+    | "confluence"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel

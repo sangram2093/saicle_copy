@@ -63,6 +63,12 @@ function withFromContextProvider(
         JIRA_API_VERSION: params?.JiraEmail,
         JIRA_DOMAIN: params?.JiraDomain ?? "",
       };
+    case "confluence":
+      return {
+        CONFLUENCE_TOKEN: params?.ConfluenceToken ?? "",
+        CONFLUENCE_API_VERSION: params?.ConfluenceApiVersion,
+        CONFLUENCE_DOMAIN: params?.ConfluenceDomain ?? "",
+      };
     case "postgres":
       return {
         POSTGRES_HOST: params?.host,

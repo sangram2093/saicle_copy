@@ -1999,6 +1999,7 @@
                 "gitlab-mr",
                 "discord",
                 "jira",
+                "confluence",
                 "commit",
                 "clipboard"
               ],

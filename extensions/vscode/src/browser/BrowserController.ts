@@ -39,7 +39,7 @@ export class BrowserController implements vscode.Disposable {
       throw new Error(`${(error as Error).message}\n\n${hint}`);
     }
 
-    this.page = await this.browser.newPage();
+    this.page = await this.browser!.newPage();
     this.logs = [];
     this.registerPageListeners(this.page);
     await this.page.goto(url, { waitUntil: "networkidle0", timeout: 60000 });
@@ -63,7 +63,9 @@ export class BrowserController implements vscode.Disposable {
   async scroll(direction: "up" | "down"): Promise<BrowserSnapshot> {
     const page = this.requirePage();
     const delta =
-      direction === "down" ? this.viewport.height * 0.9 : -this.viewport.height * 0.9;
+      direction === "down"
+        ? this.viewport.height * 0.9
+        : -this.viewport.height * 0.9;
     await page.evaluate(
       (amount) => window.scrollBy({ top: amount, behavior: "smooth" }),
       delta,
@@ -127,10 +129,8 @@ export class BrowserController implements vscode.Disposable {
     return this.resolverStats;
   }
 
-  private async getLaunchOptions(
-    stats: ResolverStats,
-  ): Promise<Parameters<ResolverStats["puppeteer"]["launch"]>[0]> {
-    const baseOptions: Parameters<ResolverStats["puppeteer"]["launch"]>[0] = {
+  private async getLaunchOptions(stats: ResolverStats): Promise<any> {
+    const baseOptions: any = {
       headless: true,
       defaultViewport: this.viewport,
     };
@@ -184,11 +184,12 @@ export class BrowserController implements vscode.Disposable {
 
     let screenshot: string | undefined = undefined;
     try {
-      const buffer = await this.page.screenshot({
+      const base64 = await this.page.screenshot({
         type: "webp",
         fullPage: false,
+        encoding: "base64",
       });
-      screenshot = `data:image/webp;base64,${buffer.toString("base64")}`;
+      screenshot = `data:image/webp;base64,${base64}`;
     } catch (error) {
       console.error("Failed to capture screenshot:", error);
     }

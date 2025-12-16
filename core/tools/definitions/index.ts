@@ -7,6 +7,7 @@ export { fetchUrlContentTool } from "./fetchUrlContent";
 export { globSearchTool } from "./globSearch";
 export { grepSearchTool } from "./grepSearch";
 export { lsTool } from "./ls";
+export { auraPipelineTool } from "./auraPipeline";
 export { multiEditTool } from "./multiEdit";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";

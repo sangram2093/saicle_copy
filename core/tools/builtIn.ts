@@ -71,6 +71,9 @@ export enum BuiltInToolNames {
   ConfluenceAddDiagram = "confluence_addDiagram",
   ConfluenceModifyPageContent = "confluence_modifyPageContent",
   ConfluenceAddPageLabel = "confluence_addPageLabel",
+
+  // Aura pipeline
+  AuraPipeline = "aura_pipeline",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

@@ -22,6 +22,7 @@ import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
+import { auraPipelineImpl } from "./implementations/auraPipeline";
 import { safeParseToolCallArgs } from "./parseArgs";
 
 import {
@@ -260,6 +261,8 @@ export async function callBuiltInTool(
       return await fetchUrlChunkImpl(args, extras);
     case BuiltInToolNames.BrowserAction:
       return await browserActionImpl(args, extras);
+    case BuiltInToolNames.AuraPipeline:
+      return await auraPipelineImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

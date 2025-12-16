@@ -13,6 +13,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.lsTool,
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
+  toolDefinitions.auraPipelineTool,
   toolDefinitions.browserActionTool,
   toolDefinitions.singleFindAndReplaceTool,
 

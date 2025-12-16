@@ -105,6 +105,7 @@
     "openai": "^5.13.1",
     "p-limit": "^6.1.0",
     "partial-json": "^0.1.7",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.11.3",
     "plist": "^3.1.0",
     "posthog-node": "^3.6.3",

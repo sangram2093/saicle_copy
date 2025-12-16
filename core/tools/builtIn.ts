@@ -74,6 +74,11 @@ export enum BuiltInToolNames {
 
   // Aura pipeline
   AuraPipeline = "aura_pipeline",
+
+  // Parsing utilities
+  ParsePdf = "parse_pdf",
+  ParseExcel = "parse_excel",
+  ParseDocx = "parse_docx",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

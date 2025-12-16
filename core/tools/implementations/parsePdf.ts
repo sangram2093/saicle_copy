@@ -1,7 +1,5 @@
 import fs from "fs";
 import path from "path";
-// @ts-ignore pdf-parse ships without bundled types
-import pdfParse from "pdf-parse";
 
 import { ContextItem } from "../..";
 import { ToolImpl } from ".";
@@ -26,6 +24,10 @@ export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
   if (!fs.existsSync(pdfPath)) {
     throw new Error(`PDF not found: ${pdfPath}`);
   }
+
+  // Lazy load to avoid bundling native/test assets unless the tool is invoked.
+  const pdfParseModule = await import("pdf-parse");
+  const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
 
   const buffer = await fs.promises.readFile(pdfPath);
   const parsed = await pdfParse(buffer);

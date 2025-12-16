@@ -1,7 +1,5 @@
 import fs from "fs";
 import path from "path";
-// @ts-ignore pdf-parse ships without bundled types
-import pdfParse from "pdf-parse";
 
 import { ToolImpl } from ".";
 import { ContextItem, ILLM } from "../..";
@@ -180,6 +178,9 @@ function ensureFileExists(filePath: string) {
 async function extractPdfText(pdfPath: string): Promise<string> {
   ensureFileExists(pdfPath);
   const data = await fs.promises.readFile(pdfPath);
+  // Lazy import to avoid pulling pdf-parse (and its test assets) at activation time.
+  const pdfParseModule = await import("pdf-parse");
+  const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
   const parsed = await pdfParse(data);
   return (parsed as any)?.text || "";
 }

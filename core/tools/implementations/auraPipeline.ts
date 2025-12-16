@@ -178,9 +178,10 @@ function ensureFileExists(filePath: string) {
 async function extractPdfText(pdfPath: string): Promise<string> {
   ensureFileExists(pdfPath);
   const data = await fs.promises.readFile(pdfPath);
-  // Lazy import to avoid pulling pdf-parse (and its test assets) at activation time.
-  const pdfParseModule = await import("pdf-parse");
-  const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
+  // Lazy require to avoid pulling pdf-parse (and its test assets) at activation time.
+  // @ts-ignore pdf-parse has no bundled types
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const pdfParse = require("pdf-parse");
   const parsed = await pdfParse(data);
   return (parsed as any)?.text || "";
 }

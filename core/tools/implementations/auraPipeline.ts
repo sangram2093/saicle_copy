@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+// @ts-ignore pdf-parse ships without bundled types
 import pdfParse from "pdf-parse";
 
 import { ToolImpl } from ".";

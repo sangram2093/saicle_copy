@@ -14,4 +14,5 @@ declare module "pdf-parse" {
   ): Promise<PDFParseResult>;
 
   export = pdfParse;
+  export default pdfParse;
 }

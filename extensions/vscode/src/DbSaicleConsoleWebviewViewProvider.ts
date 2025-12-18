@@ -169,8 +169,8 @@ export class DbSaicleConsoleWebviewViewProvider
         )
         .toString();
     } else {
-      scriptUri = "http://localhost:5173/src/console.tsx";
-      styleMainUri = "http://localhost:5173/src/indexConsole.css";
+      scriptUri = "http://localhost:5185/src/console.tsx";
+      styleMainUri = "http://localhost:5185/src/indexConsole.css";
     }
 
     panel.webview.options = {
@@ -206,7 +206,7 @@ export class DbSaicleConsoleWebviewViewProvider
         ${
           inDevelopmentMode
             ? `<script type="module">
-          import RefreshRuntime from "http://localhost:5173/@react-refresh"
+          import RefreshRuntime from "http://localhost:5185/@react-refresh"
           RefreshRuntime.injectIntoGlobalHook(window)
           window.$RefreshReg$ = () => {}
           window.$RefreshSig$ = () => (type) => type

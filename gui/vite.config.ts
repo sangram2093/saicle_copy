@@ -39,6 +39,8 @@ export default defineConfig({
       allowedHeaders: ["*", "Content-Type", "Authorization"],
       credentials: true,
     },
+    port: 5185,
+    strictPort: true,
   },
   test: {
     globals: true,

@@ -88,8 +88,8 @@ export class DbSaicleGUIWebviewViewProvider
         .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.css"))
         .toString();
     } else {
-      scriptUri = "http://localhost:5173/src/main.tsx";
-      styleMainUri = "http://localhost:5173/src/index.css";
+      scriptUri = "http://localhost:5185/src/main.tsx";
+      styleMainUri = "http://localhost:5185/src/index.css";
     }
 
     panel.webview.options = {
@@ -143,7 +143,7 @@ export class DbSaicleGUIWebviewViewProvider
         ${
           inDevelopmentMode
             ? `<script type="module">
-          import RefreshRuntime from "http://localhost:5173/@react-refresh"
+          import RefreshRuntime from "http://localhost:5185/@react-refresh"
           RefreshRuntime.injectIntoGlobalHook(window)
           window.$RefreshReg$ = () => {}
           window.$RefreshSig$ = () => (type) => type

@@ -68,6 +68,11 @@ async function buildWithEsbuild() {
       "tiktokenWorkerPool.mjs",
       "vscode",
       "./index.node",
+      // Optional native deps pulled by transitive packages (e.g. jsdom)
+      "canvas",
+      "sharp",
+      "utf-8-validate",
+      "bufferutil",
     ],
     format: "cjs",
     platform: "node",

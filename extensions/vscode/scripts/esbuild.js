@@ -10,7 +10,16 @@ const esbuildConfig = {
   entryPoints: ["src/extension.ts"],
   bundle: true,
   outfile: "out/extension.js",
-  external: ["vscode", "esbuild", "./xhr-sync-worker.js"],
+  external: [
+    "vscode",
+    "esbuild",
+    "./xhr-sync-worker.js",
+    // Optional native deps pulled by transitive packages (e.g. jsdom)
+    "canvas",
+    "sharp",
+    "utf-8-validate",
+    "bufferutil",
+  ],
   format: "cjs",
   platform: "node",
   sourcemap: flags.includes("--sourcemap"),

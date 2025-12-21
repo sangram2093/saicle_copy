@@ -195,10 +195,10 @@ async function extractPdfText(
   const resolvedPath = await resolvePdfPath(pdfPath, ide);
   ensureFileExists(resolvedPath);
   const data = await fs.promises.readFile(resolvedPath);
-  // Lazy require to avoid pulling pdf-parse (and its test assets) at activation time.
+  // Lazy require the library module (not package entry, which self-tests).
   // @ts-ignore pdf-parse has no bundled types
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const pdfParse = require("pdf-parse");
+  const pdfParse = require("pdf-parse/lib/pdf-parse.js");
   const parsed = await pdfParse(data);
   return (parsed as any)?.text || "";
 }

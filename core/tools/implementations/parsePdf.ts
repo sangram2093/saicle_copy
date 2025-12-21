@@ -36,10 +36,10 @@ export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
     throw new Error(`PDF not found: ${pdfPath}`);
   }
 
-  // Lazy require to avoid bundling pdf-parse (and its test assets) unless invoked.
+  // Lazy require the library module (not the package entry, which self-tests).
   // @ts-ignore pdf-parse has no bundled types
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const pdfParse = require("pdf-parse");
+  const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 
   const buffer = await fs.promises.readFile(pdfPath);
   const parsed = await pdfParse(buffer);

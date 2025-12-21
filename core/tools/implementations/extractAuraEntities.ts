@@ -50,7 +50,7 @@ export const extractAuraEntitiesImpl: ToolImpl = async (
     {
       name: "Aura Entities",
       description: "Entity/relationship JSON extracted from summary",
-      content: `\`\`\`json\n${JSON.stringify(aggregated, null, 2)}\n\`\`\``,
+      content: toMarkdown(aggregated),
     },
   ];
 
@@ -97,4 +97,40 @@ async function runCompletion(
     topP: 0.1,
     topK: 40,
   });
+}
+
+function toMarkdown(graph: { entities: any[]; relationships: any[] }): string {
+  const entitiesMd = (graph.entities || [])
+    .map(
+      (e) =>
+        `- **${e.id || "(id)"}**: ${e.name || "(name)"} (${e.type || "process"})`,
+    )
+    .join("\n");
+
+  const relsMd = (graph.relationships || [])
+    .map((r) => {
+      const cond = r["Condition for Relationship to be Active"] || "";
+      const opt = r["Optionality"] || "";
+      const freq = r["frequency"] || "";
+      const parts = [
+        `**${r.subject_id}** --${r.verb || "(verb)"}--> **${r.object_id}**`,
+        cond ? `cond: ${cond}` : "",
+        opt ? `opt: ${opt}` : "",
+        freq ? `freq: ${freq}` : "",
+      ].filter(Boolean);
+      return `- ${parts.join(" | ")}`;
+    })
+    .join("\n");
+
+  return [
+    "# Entities",
+    entitiesMd || "(none)",
+    "",
+    "# Relationships",
+    relsMd || "(none)",
+    "",
+    "```json",
+    JSON.stringify(graph, null, 2),
+    "```",
+  ].join("\n");
 }

@@ -65,6 +65,11 @@ export const DEFAULT_MAX_OUTPUT_TOKENS = parseInt(
   10,
 );
 
+export const DEFAULT_CHUNK_SIZE_CHARS = parseInt(
+  process.env.AURA_PDF_CHUNK_SIZE_CHARS || "12000",
+  10,
+);
+
 export function extractJsonBlob(rawText: string): any {
   const text = (rawText || "").trim();
   const attempts: string[] = [];
@@ -107,4 +112,48 @@ function tryJson(text: string) {
   } catch {
     return null;
   }
+}
+
+export function mergeGraphs(
+  base: any,
+  incoming: any,
+): { entities: any[]; relationships: any[] } {
+  const baseEntities = base?.entities || [];
+  const baseRels = base?.relationships || [];
+  const incomingEntities = incoming?.entities || [];
+  const incomingRels = incoming?.relationships || [];
+
+  const entityKey = (e: any) =>
+    `${(e.name || "").trim().toLowerCase()}|${(e.type || "process").toLowerCase()}`;
+  const relKey = (r: any) =>
+    [
+      r.subject_id,
+      r.object_id,
+      (r.verb || "").trim().toLowerCase(),
+      (r["Condition for Relationship to be Active"] || "").trim().toLowerCase(),
+      (r.frequency || "").trim().toLowerCase(),
+    ].join("|");
+
+  const entityMap = new Map<string, any>();
+  baseEntities.forEach((e: any) => entityMap.set(entityKey(e), e));
+  incomingEntities.forEach((e: any) => {
+    const key = entityKey(e);
+    if (!entityMap.has(key)) {
+      entityMap.set(key, e);
+    }
+  });
+
+  const relMap = new Map<string, any>();
+  baseRels.forEach((r: any) => relMap.set(relKey(r), r));
+  incomingRels.forEach((r: any) => {
+    const key = relKey(r);
+    if (!relMap.has(key)) {
+      relMap.set(key, r);
+    }
+  });
+
+  return {
+    entities: Array.from(entityMap.values()),
+    relationships: Array.from(relMap.values()),
+  };
 }

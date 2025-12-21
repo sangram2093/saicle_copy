@@ -7,9 +7,12 @@ import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getStringArg } from "../parseArgs";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { getNumberArg } from "../parseArgs";
+import { chunkText, DEFAULT_CHUNK_SIZE_CHARS } from "./parsePdfHelpers";
 
 type ParsePdfArgs = {
   pdfPath: string;
+  chunkSizeChars?: number;
 };
 
 function formatJson(obj: any) {
@@ -36,6 +39,11 @@ export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
     throw new Error(`PDF not found: ${pdfPath}`);
   }
 
+  const chunkSize =
+    typeof args.chunkSizeChars !== "undefined"
+      ? getNumberArg(args as any, "chunkSizeChars")
+      : DEFAULT_CHUNK_SIZE_CHARS;
+
   // Lazy require the library module (not the package entry, which self-tests).
   // @ts-ignore pdf-parse has no bundled types
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -43,12 +51,23 @@ export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
 
   const buffer = await fs.promises.readFile(pdfPath);
   const parsed = await pdfParse(buffer);
+  const chunks = chunkText(parsed.text || "", chunkSize);
+
+  const markdownChunks =
+    chunks.length === 0
+      ? "# PDF Chunks\n\n(No text extracted)"
+      : [
+          `# PDF Chunks (size ~${chunkSize} chars)\n`,
+          ...chunks.map(
+            (chunk, idx) => `## Chunk ${idx + 1}\n\n${chunk.trim()}\n`,
+          ),
+        ].join("\n");
 
   const contextItems: ContextItem[] = [
     {
-      name: "PDF Text",
-      description: `Extracted text from ${path.basename(pdfPath)}`,
-      content: parsed.text,
+      name: "PDF Chunks (markdown)",
+      description: `Chunked text from ${path.basename(pdfPath)}`,
+      content: markdownChunks,
     },
     {
       name: "PDF Metadata",

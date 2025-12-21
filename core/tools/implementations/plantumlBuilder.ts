@@ -3,6 +3,7 @@ import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getOptionalStringArg, getStringArg } from "../parseArgs";
 import { toCanonicalGraph, generatePlantuml, generatePlantumlDiff } from "./plantumlHelpers";
+import { extractJsonBlob } from "./extractAuraHelpers";
 
 type PlantumlBuilderArgs = {
   newGraphJson: string;
@@ -20,13 +21,8 @@ export const plantumlBuilderImpl: ToolImpl = async (
   const title = getOptionalStringArg(args, "title");
   const scale = getOptionalStringArg(args, "scale");
 
-  const newObj = typeof newGraphJson === "string" ? JSON.parse(newGraphJson) : newGraphJson;
-  const oldObj =
-    oldGraphJson && typeof oldGraphJson === "string"
-      ? JSON.parse(oldGraphJson)
-      : oldGraphJson
-      ? oldGraphJson
-      : undefined;
+  const newObj = parseGraphInput(newGraphJson);
+  const oldObj = oldGraphJson ? parseGraphInput(oldGraphJson) : undefined;
 
   const newCanonical = toCanonicalGraph(newObj);
   const oldCanonical = oldObj ? toCanonicalGraph(oldObj) : undefined;
@@ -53,3 +49,15 @@ export const plantumlBuilderImpl: ToolImpl = async (
 
   return contextItems;
 };
+
+function parseGraphInput(input: string) {
+  try {
+    return JSON.parse(input);
+  } catch {
+    try {
+      return extractJsonBlob(input);
+    } catch {
+      throw new Error("Failed to parse graph input as JSON or markdown with JSON.");
+    }
+  }
+}

@@ -1,45 +1,100 @@
 import { ContextItem } from "../..";
 import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
-import { getOptionalStringArg, getStringArg } from "../parseArgs";
-import { runCompletion } from "./summarizePdfHelpers";
-import { ENTITY_PROMPT, extractJsonBlob, DEFAULT_MAX_OUTPUT_TOKENS } from "./extractAuraHelpers";
+import { getNumberArg, getOptionalStringArg, getStringArg } from "../parseArgs";
+import { ENTITY_PROMPT, extractJsonBlob, DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_CHUNK_SIZE_CHARS, mergeGraphs } from "./extractAuraHelpers";
+import { chunkText } from "./parsePdfHelpers";
+import { ILLM } from "../..";
 
 type ExtractAuraEntitiesArgs = {
-  summary: string;
+  markdown: string;
   previousGraphJson?: string;
   model?: string;
   maxOutputTokens?: number;
+  chunkSizeChars?: number;
 };
 
 export const extractAuraEntitiesImpl: ToolImpl = async (
   args: ExtractAuraEntitiesArgs,
   extras,
 ) => {
-  const summary = getStringArg(args, "summary");
+  const markdown = getStringArg(args, "markdown");
   const previousGraphJson = getOptionalStringArg(args, "previousGraphJson");
   const model = getOptionalStringArg(args, "model") || extras.llm.model;
   const maxTokens =
     typeof args.maxOutputTokens !== "undefined"
       ? Number(args.maxOutputTokens)
       : DEFAULT_MAX_OUTPUT_TOKENS;
+  const chunkSize =
+    typeof args.chunkSizeChars !== "undefined"
+      ? getNumberArg(args as any, "chunkSizeChars")
+      : DEFAULT_CHUNK_SIZE_CHARS;
 
-  const raw = await runCompletion(
-    extras.llm,
-    ENTITY_PROMPT(summary, previousGraphJson),
-    model,
-    maxTokens,
-  );
+  // Split markdown into chunks based on "## Chunk" headings; fallback to re-chunking plain text.
+  const chunks = extractChunksFromMarkdown(markdown, chunkSize);
+  if (!chunks.length) {
+    throw new Error("No chunks found in markdown input.");
+  }
 
-  const entitiesJson = extractJsonBlob(raw);
+  let aggregated = previousGraphJson ? JSON.parse(previousGraphJson) : { entities: [], relationships: [] };
+
+  for (let idx = 0; idx < chunks.length; idx++) {
+    const chunk = chunks[idx];
+    const prompt = ENTITY_PROMPT(chunk, JSON.stringify(aggregated));
+    const raw = await runCompletion(extras.llm, prompt, model, maxTokens);
+    const chunkGraph = extractJsonBlob(raw);
+    aggregated = mergeGraphs(aggregated, chunkGraph);
+  }
 
   const contextItems: ContextItem[] = [
     {
       name: "Aura Entities",
       description: "Entity/relationship JSON extracted from summary",
-      content: `\`\`\`json\n${JSON.stringify(entitiesJson, null, 2)}\n\`\`\``,
+      content: `\`\`\`json\n${JSON.stringify(aggregated, null, 2)}\n\`\`\``,
     },
   ];
 
   return contextItems;
 };
+
+function extractChunksFromMarkdown(markdown: string, fallbackChunkSize: number): string[] {
+  const lines = markdown.split(/\r?\n/);
+  const chunks: string[] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (/^##\s+Chunk\s+\d+/i.test(line)) {
+      if (current.length) {
+        chunks.push(current.join("\n").trim());
+        current = [];
+      }
+      continue;
+    }
+    current.push(line);
+  }
+  if (current.length) {
+    chunks.push(current.join("\n").trim());
+  }
+
+  const cleaned = chunks.filter((c) => c.trim().length > 0);
+  if (cleaned.length) return cleaned;
+
+  // fallback: chunk raw text if no headings found
+  return chunkText(markdown, fallbackChunkSize);
+}
+
+async function runCompletion(
+  llm: ILLM,
+  prompt: string,
+  model: string,
+  maxOutputTokens: number,
+): Promise<string> {
+  const controller = new AbortController();
+  return llm.complete(prompt, controller.signal, {
+    model,
+    maxTokens: maxOutputTokens,
+    temperature: 0.01,
+    topP: 0.1,
+    topK: 40,
+  });
+}

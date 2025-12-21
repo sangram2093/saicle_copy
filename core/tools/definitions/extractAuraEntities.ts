@@ -13,12 +13,11 @@ export const extractAuraEntitiesTool: Tool = {
       "Given a regulation summary, extract entity/relationship JSON using the Aura prompts.",
     parameters: {
       type: "object",
-      required: ["summary"],
+      required: ["markdown"],
       properties: {
-        summary: {
+        markdown: {
           type: "string",
-          description:
-            "Summary text of the regulation (e.g., from summarize_pdf).",
+          description: "Markdown containing chunked PDF text (from parse_pdf).",
         },
         previousGraphJson: {
           type: "string",
@@ -34,6 +33,11 @@ export const extractAuraEntitiesTool: Tool = {
           type: "number",
           description:
             "Max tokens per LLM call (default MAX_OUTPUT_TOKENS env or 8192).",
+        },
+        chunkSizeChars: {
+          type: "number",
+          description:
+            "Optional chunk size override if you need to re-chunk markdown text.",
         },
       },
     },

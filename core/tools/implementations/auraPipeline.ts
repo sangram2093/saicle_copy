@@ -53,6 +53,10 @@ const DEFAULT_MAX_OUTPUT_TOKENS = parseInt(
   10,
 );
 const DEFAULT_PUML_SCALE = process.env.PLANTUML_SCALE || "max 1600*900";
+const DEFAULT_CHUNK_SIZE_CHARS = parseInt(
+  process.env.AURA_PDF_CHUNK_SIZE_CHARS || "12000",
+  10,
+);
 
 const SUMMARY_PROMPT = (text: string, context?: string) => {
   const base = `
@@ -201,6 +205,44 @@ async function extractPdfText(
   const pdfParse = require("pdf-parse/lib/pdf-parse.js");
   const parsed = await pdfParse(data);
   return (parsed as any)?.text || "";
+}
+
+function chunkText(text: string, maxChars: number): string[] {
+  if (!text) return [];
+  const chunks: string[] = [];
+  for (let i = 0; i < text.length; i += maxChars) {
+    chunks.push(text.slice(i, i + maxChars));
+  }
+  return chunks;
+}
+
+async function summarizeInChunks(
+  llm: ILLM,
+  text: string,
+  context: string | undefined,
+  model: string,
+  maxTokens: number,
+): Promise<string> {
+  const parts = chunkText(text, DEFAULT_CHUNK_SIZE_CHARS);
+  if (parts.length === 0) {
+    return "";
+  }
+
+  const summaries: string[] = [];
+  for (let idx = 0; idx < parts.length; idx++) {
+    const chunk = parts[idx];
+    const prefix = parts.length > 1 ? `Chunk ${idx + 1}/${parts.length}:\n` : "";
+    const summary = await runCompletion(
+      llm,
+      // Use context only on the first chunk to avoid excessive prompt size.
+      summaries.length === 0 ? SUMMARY_PROMPT(chunk, context) : SUMMARY_PROMPT(chunk),
+      model,
+      maxTokens,
+    );
+    summaries.push(`${prefix}${summary}`);
+  }
+
+  return summaries.join("\n\n");
 }
 
 async function runCompletion(
@@ -530,17 +572,13 @@ export const auraPipelineImpl: ToolImpl = async (
   ]);
 
   const oldSummary = oldText
-    ? await runCompletion(
-        extras.llm,
-        SUMMARY_PROMPT(oldText),
-        model,
-        maxTokens,
-      )
+    ? await summarizeInChunks(extras.llm, oldText, undefined, model, maxTokens)
     : undefined;
 
-  const newSummary = await runCompletion(
+  const newSummary = await summarizeInChunks(
     extras.llm,
-    SUMMARY_PROMPT(newText, oldSummary),
+    newText,
+    oldSummary,
     model,
     maxTokens,
   );

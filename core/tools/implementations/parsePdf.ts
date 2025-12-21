@@ -1,10 +1,12 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 import { ContextItem } from "../..";
 import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getStringArg } from "../parseArgs";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 type ParsePdfArgs = {
   pdfPath: string;
@@ -19,7 +21,16 @@ function formatJson(obj: any) {
 }
 
 export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
-  const pdfPath = path.resolve(getStringArg(args, "pdfPath"));
+  const requestedPath = getStringArg(args, "pdfPath");
+  const resolvedUri = await resolveRelativePathInDir(requestedPath, extras.ide);
+  if (!resolvedUri) {
+    throw new Error(`PDF not found: ${requestedPath}`);
+  }
+
+  const pdfPath =
+    resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
+      ? fileURLToPath(resolvedUri)
+      : path.resolve(requestedPath);
 
   if (!fs.existsSync(pdfPath)) {
     throw new Error(`PDF not found: ${pdfPath}`);

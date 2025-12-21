@@ -1,10 +1,12 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 import { ToolImpl } from ".";
 import { ContextItem, ILLM } from "../..";
 import { BuiltInToolNames } from "../builtIn";
 import { getOptionalStringArg, getStringArg } from "../parseArgs";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 type AuraPipelineArgs = {
   newPdfPath: string;
@@ -175,9 +177,24 @@ function ensureFileExists(filePath: string) {
   }
 }
 
-async function extractPdfText(pdfPath: string): Promise<string> {
-  ensureFileExists(pdfPath);
-  const data = await fs.promises.readFile(pdfPath);
+async function resolvePdfPath(
+  requestedPath: string,
+  ide: any,
+): Promise<string> {
+  const resolvedUri = await resolveRelativePathInDir(requestedPath, ide);
+  if (resolvedUri?.startsWith("file:")) {
+    return fileURLToPath(resolvedUri);
+  }
+  return path.resolve(requestedPath);
+}
+
+async function extractPdfText(
+  pdfPath: string,
+  ide: any,
+): Promise<string> {
+  const resolvedPath = await resolvePdfPath(pdfPath, ide);
+  ensureFileExists(resolvedPath);
+  const data = await fs.promises.readFile(resolvedPath);
   // Lazy require to avoid pulling pdf-parse (and its test assets) at activation time.
   // @ts-ignore pdf-parse has no bundled types
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -508,8 +525,8 @@ export const auraPipelineImpl: ToolImpl = async (
     getOptionalStringArg(rawArgs, "plantumlScale") || DEFAULT_PUML_SCALE;
 
   const [newText, oldText] = await Promise.all([
-    extractPdfText(newPdfPath),
-    oldPdfPath ? extractPdfText(path.resolve(oldPdfPath)) : Promise.resolve(""),
+    extractPdfText(newPdfPath, extras.ide),
+    oldPdfPath ? extractPdfText(oldPdfPath, extras.ide) : Promise.resolve(""),
   ]);
 
   const oldSummary = oldText

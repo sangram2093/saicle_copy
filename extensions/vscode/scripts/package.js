@@ -18,6 +18,25 @@ if (!fs.existsSync("build")) {
 
 const isPreRelease = args.includes("--pre-release");
 
+// Stage specific runtime deps into out/node_modules so they are available at runtime.
+function copyRuntimeDeps() {
+  const deps = ["pdf-parse", "node-ensure", "debug"];
+  for (const dep of deps) {
+    const src = `node_modules/${dep}`;
+    const dest = `out/node_modules/${dep}`;
+    if (!fs.existsSync(src)) {
+      console.warn(`[package.js] Skipping copy for ${dep} (not found in node_modules)`);
+      continue;
+    }
+    fs.rmSync(dest, { recursive: true, force: true });
+    fs.mkdirSync("out/node_modules", { recursive: true });
+    fs.cpSync(src, dest, { recursive: true });
+    console.log(`[package.js] Copied ${src} -> ${dest}`);
+  }
+}
+
+copyRuntimeDeps();
+
 let command = isPreRelease
   ? "npx @vscode/vsce package --out ./build --pre-release --no-dependencies" // --yarn"
   : "npx @vscode/vsce package --out ./build --no-dependencies"; // --yarn";

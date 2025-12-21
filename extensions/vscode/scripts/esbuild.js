@@ -19,6 +19,9 @@ const esbuildConfig = {
     "sharp",
     "utf-8-validate",
     "bufferutil",
+    // Keep pdf-parse on disk so its bundled pdf.js assets are available at runtime
+    "pdf-parse",
+    "pdf-parse/lib/pdf-parse.js",
   ],
   format: "cjs",
   platform: "node",

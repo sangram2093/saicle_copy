@@ -7,12 +7,13 @@ import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getNumberArg, getOptionalStringArg, getStringArg } from "../parseArgs";
 import {
-  ENTITY_PROMPT,
-  extractJsonBlob,
   DEFAULT_MAX_OUTPUT_TOKENS,
   DEFAULT_CHUNK_SIZE_CHARS,
+  DEFAULT_MARKDOWN_PROMPT,
+  parseGraphFromMarkdown,
   mergeGraphs,
-} from "./extractAuraHelpers";
+  toMarkdown,
+} from "./extractEntitiesHelpers";
 import { chunkText } from "./parsePdfHelpers";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 
@@ -20,7 +21,7 @@ type ExtractEntitiesArgs = {
   markdown: string;
   prompt?: string;
   promptFilePath?: string;
-  previousGraphJson?: string;
+  previousGraphMarkdown?: string;
   model?: string;
   maxOutputTokens?: number;
   chunkSizeChars?: number;
@@ -33,7 +34,10 @@ export const extractEntitiesImpl: ToolImpl = async (
   const markdown = getStringArg(args, "markdown");
   const promptInline = getOptionalStringArg(args, "prompt");
   const promptFile = getOptionalStringArg(args, "promptFilePath");
-  const previousGraphJson = getOptionalStringArg(args, "previousGraphJson");
+  const previousGraphMarkdown = getOptionalStringArg(
+    args,
+    "previousGraphMarkdown",
+  );
   const model = getOptionalStringArg(args, "model") || extras.llm.model;
   const maxTokens =
     typeof args.maxOutputTokens !== "undefined"
@@ -53,15 +57,15 @@ export const extractEntitiesImpl: ToolImpl = async (
   }
 
   let aggregated =
-    previousGraphJson && previousGraphJson.trim()
-      ? JSON.parse(previousGraphJson)
+    previousGraphMarkdown && previousGraphMarkdown.trim()
+      ? parseGraphFromMarkdown(previousGraphMarkdown)
       : { entities: [], relationships: [] };
 
   for (let idx = 0; idx < chunks.length; idx++) {
     const chunk = chunks[idx];
     const prompt = buildPrompt(basePrompt, chunk, aggregated);
     const raw = await runCompletion(extras.llm, prompt, model, maxTokens);
-    const chunkGraph = extractJsonBlob(raw);
+    const chunkGraph = parseGraphFromMarkdown(raw);
     aggregated = mergeGraphs(aggregated, chunkGraph);
   }
 
@@ -88,18 +92,18 @@ async function resolvePrompt(promptInline: string | undefined, promptFile: strin
         : path.resolve(promptFile);
     return fs.readFileSync(resolvedPath, "utf-8");
   }
-  // Default prompt (regulation-focused)
-  return ENTITY_PROMPT("", undefined);
+  // Default prompt (markdown-only)
+  return DEFAULT_MARKDOWN_PROMPT;
 }
 
 function buildPrompt(basePrompt: string, chunk: string, previousGraph: any): string {
-  const prev = previousGraph ? JSON.stringify(previousGraph) : "";
+  const prev = previousGraph ? toMarkdown(previousGraph) : "";
   return `${basePrompt}
 
 === CHUNK ===
 ${chunk}
 
-${prev ? `=== PREVIOUS GRAPH ===\n${prev}` : ""}`;
+${prev ? `=== PREVIOUS GRAPH (MARKDOWN) ===\n${prev}` : ""}`;
 }
 
 function extractChunksFromMarkdown(markdown: string, fallbackChunkSize: number): string[] {
@@ -142,40 +146,4 @@ async function runCompletion(
     topP: 0.1,
     topK: 40,
   });
-}
-
-function toMarkdown(graph: { entities: any[]; relationships: any[] }): string {
-  const entitiesMd = (graph.entities || [])
-    .map(
-      (e) =>
-        `- **${e.id || "(id)"}**: ${e.name || "(name)"} (${e.type || "process"})`,
-    )
-    .join("\n");
-
-  const relsMd = (graph.relationships || [])
-    .map((r) => {
-      const cond = r["Condition for Relationship to be Active"] || "";
-      const opt = r["Optionality"] || "";
-      const freq = r["frequency"] || "";
-      const parts = [
-        `**${r.subject_id}** --${r.verb || "(verb)"}--> **${r.object_id}**`,
-        cond ? `cond: ${cond}` : "",
-        opt ? `opt: ${opt}` : "",
-        freq ? `freq: ${freq}` : "",
-      ].filter(Boolean);
-      return `- ${parts.join(" | ")}`;
-    })
-    .join("\n");
-
-  return [
-    "# Entities",
-    entitiesMd || "(none)",
-    "",
-    "# Relationships",
-    relsMd || "(none)",
-    "",
-    "```json",
-    JSON.stringify(graph, null, 2),
-    "```",
-  ].join("\n");
 }

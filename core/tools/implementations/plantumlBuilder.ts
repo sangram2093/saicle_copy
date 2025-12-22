@@ -3,7 +3,7 @@ import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getOptionalStringArg, getStringArg } from "../parseArgs";
 import { toCanonicalGraph, generatePlantuml, generatePlantumlDiff } from "./plantumlHelpers";
-import { extractJsonBlob } from "./extractAuraHelpers";
+import { parseGraphFromMarkdown } from "./extractEntitiesHelpers";
 
 type PlantumlBuilderArgs = {
   newGraphJson: string;
@@ -51,13 +51,16 @@ export const plantumlBuilderImpl: ToolImpl = async (
 };
 
 function parseGraphInput(input: string) {
+  // Prefer markdown parsing; fallback to JSON if needed
+  try {
+    const parsed = parseGraphFromMarkdown(input);
+    if (parsed.entities.length || parsed.relationships.length) {
+      return parsed;
+    }
+  } catch {}
   try {
     return JSON.parse(input);
   } catch {
-    try {
-      return extractJsonBlob(input);
-    } catch {
-      throw new Error("Failed to parse graph input as JSON or markdown with JSON.");
-    }
+    throw new Error("Failed to parse graph input as markdown or JSON.");
   }
 }

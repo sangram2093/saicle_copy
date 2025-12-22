@@ -10,7 +10,7 @@ export const extractEntitiesTool: Tool = {
   function: {
     name: BuiltInToolNames.ExtractEntities,
     description:
-      "Given chunked markdown and a user-provided prompt (or default), extract entity/relationship JSON/markdown, merging across chunks to avoid duplicates.",
+      "Given chunked markdown and a user-provided prompt (or default), extract entity/relationship markdown (no JSON), merging across chunks to avoid duplicates.",
     parameters: {
       type: "object",
       required: ["markdown"],
@@ -29,10 +29,10 @@ export const extractEntitiesTool: Tool = {
           description:
             "Optional path to a file containing the extraction prompt (workspace-relative or absolute).",
         },
-        previousGraphJson: {
+        previousGraphMarkdown: {
           type: "string",
           description:
-            "Optional previous graph JSON to bias diffs and re-use structure.",
+            "Optional previous graph markdown (entities/relationships) to bias diffs and re-use structure.",
         },
         model: {
           type: "string",

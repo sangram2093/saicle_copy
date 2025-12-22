@@ -24,7 +24,21 @@ export interface ChartData {
 }
 
 /**
- * Check if a value is a valid date string
+ * Check if a value is in ISO 8601 date format
+ * Valid formats: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, YYYY-MM-DDTHH:mm:ssZ, etc.
+ */
+export const isISODateFormat = (value: unknown): boolean => {
+  if (typeof value !== "string") return false;
+
+  // ISO 8601 date regex pattern
+  // Matches: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, YYYY-MM-DDTHH:mm:ssZ, YYYY-MM-DDTHH:mm:ss±HH:mm, etc.
+  const isoDatePattern =
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})?)?$/;
+  return isoDatePattern.test(value);
+};
+
+/**
+ * Check if a value is a valid date string (loose validation, accepts multiple formats)
  */
 export const isValidDate = (value: unknown): boolean => {
   if (typeof value !== "string") return false;
@@ -35,6 +49,10 @@ export const isValidDate = (value: unknown): boolean => {
 /**
  * Classify fields in records based on their content and names
  * Returns an object mapping field names to their types
+ *
+ * A field is identified as date_field only if:
+ * 1. Field name matches date pattern (date|time|period) AND
+ * 2. Value is in ISO 8601 date format (necessary condition)
  */
 export const classifyFields = (
   records: Record<string, unknown>[],
@@ -49,8 +67,8 @@ export const classifyFields = (
   Object.keys(firstRecord).forEach((field) => {
     const value = firstRecord[field];
 
-    // Check if date field (by name pattern or valid date value)
-    if (dateFieldPattern.test(field) || isValidDate(value)) {
+    // Check if date field: field name matches pattern AND value is in ISO format (necessary condition)
+    if (dateFieldPattern.test(field) && isISODateFormat(value)) {
       fieldTypes[field] = "date_field";
     }
     // Check if cost/bill field (numeric values)

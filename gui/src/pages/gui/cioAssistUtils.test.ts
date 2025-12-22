@@ -7,6 +7,7 @@ import {
   classifyFields,
   determineChartType,
   formatCost,
+  isISODateFormat,
   isValidDate,
   prepareBarChartData,
   prepareLineChartData,
@@ -70,6 +71,33 @@ describe("cioAssistUtils", () => {
     });
   });
 
+  describe("isISODateFormat", () => {
+    it("should return true for valid ISO 8601 date strings", () => {
+      expect(isISODateFormat("2025-01-15")).toBe(true);
+      expect(isISODateFormat("2025-12-22")).toBe(true);
+      expect(isISODateFormat("2025-09-01T00:00:00")).toBe(true);
+      expect(isISODateFormat("2025-09-01T00:00:00Z")).toBe(true);
+      expect(isISODateFormat("2025-09-01T00:00:00+05:30")).toBe(true);
+      expect(isISODateFormat("2025-09-01T00:00:00-05:00")).toBe(true);
+      expect(isISODateFormat("2025-09-01T00:00:00.123Z")).toBe(true);
+    });
+
+    it("should return false for non-ISO date formats", () => {
+      expect(isISODateFormat("2025/01/15")).toBe(false);
+      expect(isISODateFormat("15-01-2025")).toBe(false);
+      expect(isISODateFormat("01/15/2025")).toBe(false);
+      expect(isISODateFormat("2025-Q1")).toBe(false);
+      expect(isISODateFormat("January 15, 2025")).toBe(false);
+    });
+
+    it("should return false for non-string values", () => {
+      expect(isISODateFormat(123)).toBe(false);
+      expect(isISODateFormat(null)).toBe(false);
+      expect(isISODateFormat(undefined)).toBe(false);
+      expect(isISODateFormat({})).toBe(false);
+    });
+  });
+
   describe("classifyFields", () => {
     it("should classify fields correctly", () => {
       const fieldTypes = classifyFields(sampleRecords);
@@ -89,7 +117,7 @@ describe("cioAssistUtils", () => {
         {
           "start date": "2025-01-01",
           "end time": "2025-01-31",
-          "report period": "2025-Q1",
+          "report period": "2025-01-15",
           value: 100,
         },
       ];

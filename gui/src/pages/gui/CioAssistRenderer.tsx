@@ -186,95 +186,97 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
 
   return (
     <div style={{ padding: "20px" }}>
-      {/* HTML Table */}
-      <div style={{ marginBottom: "40px" }}>
-        <h3
-          style={{
-            fontSize: "1.125rem",
-            fontWeight: "600",
-            marginBottom: "16px",
-          }}
-        >
-          Data Table
-        </h3>
-        <div
-          style={{
-            overflowX: "auto",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          <table
+      {/* HTML Table - Only display if multiple rows */}
+      {records.length > 1 && (
+        <div style={{ marginBottom: "40px" }}>
+          <h3
             style={{
-              borderCollapse: "collapse",
-              width: "100%",
-              backgroundColor: "#fff",
+              fontSize: "1.125rem",
+              fontWeight: "600",
+              marginBottom: "16px",
             }}
           >
-            <thead>
-              <tr
-                style={{
-                  backgroundColor: "#f3f4f6",
-                  borderBottom: "2px solid #e5e7eb",
-                }}
-              >
-                {fieldNames.map((field) => (
-                  <th
-                    key={field}
-                    style={{
-                      border: "1px solid #e5e7eb",
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#1f2937",
-                    }}
-                  >
-                    <div>{field}</div>
-                    <div
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "#6b7280",
-                        marginTop: "4px",
-                        fontWeight: "400",
-                      }}
-                    >
-                      ({fieldTypes[field]})
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((record, rowIdx) => (
+            Data Table
+          </h3>
+          <div
+            style={{
+              overflowX: "auto",
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <table
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                backgroundColor: "#fff",
+              }}
+            >
+              <thead>
                 <tr
-                  key={rowIdx}
                   style={{
-                    backgroundColor: rowIdx % 2 === 0 ? "#fff" : "#f9fafb",
-                    borderBottom: "1px solid #e5e7eb",
+                    backgroundColor: "#f3f4f6",
+                    borderBottom: "2px solid #e5e7eb",
                   }}
                 >
                   {fieldNames.map((field) => (
-                    <td
-                      key={`${rowIdx}-${field}`}
+                    <th
+                      key={field}
                       style={{
                         border: "1px solid #e5e7eb",
                         padding: "12px",
-                        color: "#374151",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        color: "#1f2937",
                       }}
                     >
-                      {fieldTypes[field] === "cost_or_bill_values"
-                        ? formatCost(record[field] as number)
-                        : fieldTypes[field] === "date_field"
-                          ? new Date(record[field] as string).toLocaleString()
-                          : String(record[field])}
-                    </td>
+                      <div>{field}</div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#6b7280",
+                          marginTop: "4px",
+                          fontWeight: "400",
+                        }}
+                      >
+                        ({fieldTypes[field]})
+                      </div>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {records.map((record, rowIdx) => (
+                  <tr
+                    key={rowIdx}
+                    style={{
+                      backgroundColor: rowIdx % 2 === 0 ? "#fff" : "#f9fafb",
+                      borderBottom: "1px solid #e5e7eb",
+                    }}
+                  >
+                    {fieldNames.map((field) => (
+                      <td
+                        key={`${rowIdx}-${field}`}
+                        style={{
+                          border: "1px solid #e5e7eb",
+                          padding: "12px",
+                          color: "#374151",
+                        }}
+                      >
+                        {fieldTypes[field] === "cost_or_bill_values"
+                          ? formatCost(record[field] as number)
+                          : fieldTypes[field] === "date_field"
+                            ? new Date(record[field] as string).toLocaleString()
+                            : String(record[field])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Chart */}
       {chartData && (

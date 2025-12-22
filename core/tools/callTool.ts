@@ -26,7 +26,7 @@ import { auraPipelineImpl } from "./implementations/auraPipeline";
 import { parsePdfImpl } from "./implementations/parsePdf";
 import { parseExcelImpl } from "./implementations/parseExcel";
 import { parseDocxImpl } from "./implementations/parseDocx";
-import { extractAuraEntitiesImpl } from "./implementations/extractAuraEntities";
+import { extractEntitiesImpl } from "./implementations/extractEntities";
 import { plantumlBuilderImpl } from "./implementations/plantumlBuilder";
 import { safeParseToolCallArgs } from "./parseArgs";
 
@@ -274,8 +274,8 @@ export async function callBuiltInTool(
       return await parseExcelImpl(args, extras);
     case BuiltInToolNames.ParseDocx:
       return await parseDocxImpl(args, extras);
-    case BuiltInToolNames.ExtractAuraEntities:
-      return await extractAuraEntitiesImpl(args, extras);
+    case BuiltInToolNames.ExtractEntities:
+      return await extractEntitiesImpl(args, extras);
     case BuiltInToolNames.PlantumlBuilder:
       return await plantumlBuilderImpl(args, extras);
     default:

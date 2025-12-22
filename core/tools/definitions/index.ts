@@ -8,7 +8,7 @@ export { globSearchTool } from "./globSearch";
 export { grepSearchTool } from "./grepSearch";
 export { lsTool } from "./ls";
 export { auraPipelineTool } from "./auraPipeline";
-export { extractAuraEntitiesTool } from "./extractAuraEntities";
+export { extractEntitiesTool } from "./extractEntities";
 export { plantumlBuilderTool } from "./plantumlBuilder";
 export { parsePdfTool } from "./parsePdf";
 export { parseExcelTool } from "./parseExcel";

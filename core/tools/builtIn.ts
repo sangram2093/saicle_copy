@@ -74,7 +74,7 @@ export enum BuiltInToolNames {
 
   // Aura pipeline
   AuraPipeline = "aura_pipeline",
-  ExtractAuraEntities = "extract_aura_entities",
+  ExtractEntities = "extract_entities",
   PlantumlBuilder = "plantuml_builder",
 
   // Parsing utilities

@@ -1,24 +1,38 @@
-import { ContextItem } from "../..";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import { ContextItem, ILLM } from "../..";
 import { ToolImpl } from ".";
 import { BuiltInToolNames } from "../builtIn";
 import { getNumberArg, getOptionalStringArg, getStringArg } from "../parseArgs";
-import { ENTITY_PROMPT, extractJsonBlob, DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_CHUNK_SIZE_CHARS, mergeGraphs } from "./extractAuraHelpers";
+import {
+  ENTITY_PROMPT,
+  extractJsonBlob,
+  DEFAULT_MAX_OUTPUT_TOKENS,
+  DEFAULT_CHUNK_SIZE_CHARS,
+  mergeGraphs,
+} from "./extractAuraHelpers";
 import { chunkText } from "./parsePdfHelpers";
-import { ILLM } from "../..";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 
-type ExtractAuraEntitiesArgs = {
+type ExtractEntitiesArgs = {
   markdown: string;
+  prompt?: string;
+  promptFilePath?: string;
   previousGraphJson?: string;
   model?: string;
   maxOutputTokens?: number;
   chunkSizeChars?: number;
 };
 
-export const extractAuraEntitiesImpl: ToolImpl = async (
-  args: ExtractAuraEntitiesArgs,
+export const extractEntitiesImpl: ToolImpl = async (
+  args: ExtractEntitiesArgs,
   extras,
 ) => {
   const markdown = getStringArg(args, "markdown");
+  const promptInline = getOptionalStringArg(args, "prompt");
+  const promptFile = getOptionalStringArg(args, "promptFilePath");
   const previousGraphJson = getOptionalStringArg(args, "previousGraphJson");
   const model = getOptionalStringArg(args, "model") || extras.llm.model;
   const maxTokens =
@@ -30,17 +44,22 @@ export const extractAuraEntitiesImpl: ToolImpl = async (
       ? getNumberArg(args as any, "chunkSizeChars")
       : DEFAULT_CHUNK_SIZE_CHARS;
 
+  const basePrompt = await resolvePrompt(promptInline, promptFile, extras.ide);
+
   // Split markdown into chunks based on "## Chunk" headings; fallback to re-chunking plain text.
   const chunks = extractChunksFromMarkdown(markdown, chunkSize);
   if (!chunks.length) {
     throw new Error("No chunks found in markdown input.");
   }
 
-  let aggregated = previousGraphJson ? JSON.parse(previousGraphJson) : { entities: [], relationships: [] };
+  let aggregated =
+    previousGraphJson && previousGraphJson.trim()
+      ? JSON.parse(previousGraphJson)
+      : { entities: [], relationships: [] };
 
   for (let idx = 0; idx < chunks.length; idx++) {
     const chunk = chunks[idx];
-    const prompt = ENTITY_PROMPT(chunk, JSON.stringify(aggregated));
+    const prompt = buildPrompt(basePrompt, chunk, aggregated);
     const raw = await runCompletion(extras.llm, prompt, model, maxTokens);
     const chunkGraph = extractJsonBlob(raw);
     aggregated = mergeGraphs(aggregated, chunkGraph);
@@ -48,14 +67,40 @@ export const extractAuraEntitiesImpl: ToolImpl = async (
 
   const contextItems: ContextItem[] = [
     {
-      name: "Aura Entities",
-      description: "Entity/relationship JSON extracted from summary",
+      name: "Entities (markdown)",
+      description: "Entity/relationship markdown extracted from chunks",
       content: toMarkdown(aggregated),
     },
   ];
 
   return contextItems;
 };
+
+async function resolvePrompt(promptInline: string | undefined, promptFile: string | undefined, ide: any) {
+  if (promptInline && promptInline.trim().length > 0) {
+    return promptInline;
+  }
+  if (promptFile) {
+    const resolvedUri = await resolveRelativePathInDir(promptFile, ide);
+    const resolvedPath =
+      resolvedUri && resolvedUri.startsWith("file:")
+        ? fileURLToPath(resolvedUri)
+        : path.resolve(promptFile);
+    return fs.readFileSync(resolvedPath, "utf-8");
+  }
+  // Default prompt (regulation-focused)
+  return ENTITY_PROMPT("", undefined);
+}
+
+function buildPrompt(basePrompt: string, chunk: string, previousGraph: any): string {
+  const prev = previousGraph ? JSON.stringify(previousGraph) : "";
+  return `${basePrompt}
+
+=== CHUNK ===
+${chunk}
+
+${prev ? `=== PREVIOUS GRAPH ===\n${prev}` : ""}`;
+}
 
 function extractChunksFromMarkdown(markdown: string, fallbackChunkSize: number): string[] {
   const lines = markdown.split(/\r?\n/);

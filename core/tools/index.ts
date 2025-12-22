@@ -14,7 +14,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.createRuleBlock,
   toolDefinitions.fetchUrlContentTool,
   toolDefinitions.auraPipelineTool,
-  toolDefinitions.extractAuraEntitiesTool,
+  toolDefinitions.extractEntitiesTool,
   toolDefinitions.plantumlBuilderTool,
   toolDefinitions.parsePdfTool,
   toolDefinitions.parseExcelTool,

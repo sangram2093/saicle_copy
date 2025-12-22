@@ -1,23 +1,33 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
-export const extractAuraEntitiesTool: Tool = {
+export const extractEntitiesTool: Tool = {
   type: "function",
-  displayTitle: "Extract Aura Entities",
-  wouldLikeTo: "extract entities/relationships from a summarized PDF",
+  displayTitle: "Extract Entities",
+  wouldLikeTo: "extract entities/relationships from chunked text using a provided prompt",
   readonly: false,
   group: BUILT_IN_GROUP_NAME,
   function: {
-    name: BuiltInToolNames.ExtractAuraEntities,
+    name: BuiltInToolNames.ExtractEntities,
     description:
-      "Given a regulation summary, extract entity/relationship JSON using the Aura prompts.",
+      "Given chunked markdown and a user-provided prompt (or default), extract entity/relationship JSON/markdown, merging across chunks to avoid duplicates.",
     parameters: {
       type: "object",
       required: ["markdown"],
       properties: {
         markdown: {
           type: "string",
-          description: "Markdown containing chunked PDF text (from parse_pdf).",
+          description: "Markdown containing chunked text (e.g., from parse_pdf).",
+        },
+        prompt: {
+          type: "string",
+          description:
+            "Custom extraction prompt. If omitted, a default regulation-focused prompt is used.",
+        },
+        promptFilePath: {
+          type: "string",
+          description:
+            "Optional path to a file containing the extraction prompt (workspace-relative or absolute).",
         },
         previousGraphJson: {
           type: "string",

@@ -72,8 +72,6 @@ export enum BuiltInToolNames {
   ConfluenceModifyPageContent = "confluence_modifyPageContent",
   ConfluenceAddPageLabel = "confluence_addPageLabel",
 
-  // Aura pipeline
-  AuraPipeline = "aura_pipeline",
   ExtractEntities = "extract_entities",
   PlantumlBuilder = "plantuml_builder",
 

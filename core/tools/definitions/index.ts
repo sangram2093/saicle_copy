@@ -7,7 +7,6 @@ export { fetchUrlContentTool } from "./fetchUrlContent";
 export { globSearchTool } from "./globSearch";
 export { grepSearchTool } from "./grepSearch";
 export { lsTool } from "./ls";
-export { auraPipelineTool } from "./auraPipeline";
 export { extractEntitiesTool } from "./extractEntities";
 export { plantumlBuilderTool } from "./plantumlBuilder";
 export { parsePdfTool } from "./parsePdf";

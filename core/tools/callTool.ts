@@ -22,7 +22,6 @@ import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
 import { viewRepoMapImpl } from "./implementations/viewRepoMap";
 import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
-import { auraPipelineImpl } from "./implementations/auraPipeline";
 import { parsePdfImpl } from "./implementations/parsePdf";
 import { parseExcelImpl } from "./implementations/parseExcel";
 import { parseDocxImpl } from "./implementations/parseDocx";
@@ -266,8 +265,6 @@ export async function callBuiltInTool(
       return await fetchUrlChunkImpl(args, extras);
     case BuiltInToolNames.BrowserAction:
       return await browserActionImpl(args, extras);
-    case BuiltInToolNames.AuraPipeline:
-      return await auraPipelineImpl(args, extras);
     case BuiltInToolNames.ParsePdf:
       return await parsePdfImpl(args, extras);
     case BuiltInToolNames.ParseExcel:

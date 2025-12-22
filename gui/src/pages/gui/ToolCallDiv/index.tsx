@@ -3,6 +3,7 @@ import { ToolCallState } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { useState } from "react";
 import { useAppSelector } from "../../../redux/hooks";
+import { CioAssistRenderer } from "../CioAssistRenderer";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { GroupedToolCallHeader } from "./GroupedToolCallHeader";
 import { SimpleToolCallUI } from "./SimpleToolCallUI";
@@ -38,6 +39,33 @@ export function ToolCallDiv({
     );
     const functionName = toolCallState.toolCall.function?.name;
     const icon = functionName && toolCallIcons[functionName];
+
+    // Check if this is a cio_assist tool with output
+    if (
+      functionName?.toLowerCase().includes("cio_assist") &&
+      toolCallState.output &&
+      toolCallState.output.length > 0 &&
+      toolCallState.status === "done"
+    ) {
+      const jsonLinesOutput = toolCallState.output
+        .map((item) => item.content)
+        .join("\n");
+      return (
+        <ToolCallDisplay
+          icon={getStatusIcon(toolCallState.status)}
+          tool={tool}
+          toolCallState={toolCallState}
+          historyIndex={historyIndex}
+        >
+          <div className="mt-4">
+            <CioAssistRenderer
+              jsonLines={jsonLinesOutput}
+              toolName={functionName}
+            />
+          </div>
+        </ToolCallDisplay>
+      );
+    }
 
     if (icon) {
       return (

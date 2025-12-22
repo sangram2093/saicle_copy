@@ -109,7 +109,7 @@ export const determineChartType = (
  * Format a numeric value as Euro currency with 2 decimal places
  */
 export const formatCost = (value: number): string => {
-  return new Intl.NumberFormat("de-DE", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,

@@ -148,6 +148,31 @@ const generateRGB = (index: number): string => {
 };
 
 /**
+ * Remove common values from dimension fields to create optimized labels
+ * Only keeps values that differ across records for that dimension
+ */
+const optimizeDimensionLabels = (
+  records: Record<string, unknown>[],
+  dimensionFields: string[],
+): Record<string, string[]> => {
+  const result: Record<string, string[]> = {};
+
+  dimensionFields.forEach((field) => {
+    const values = records.map((r) => String(r[field]));
+
+    // Check if all values are the same
+    const uniqueValues = Array.from(new Set(values));
+
+    // Only include fields that have varying values
+    if (uniqueValues.length > 1) {
+      result[field] = values;
+    }
+  });
+
+  return result;
+};
+
+/**
  * Prepare data for line chart
  * Groups by non-cost fields and sorts by date
  */
@@ -211,12 +236,18 @@ export const prepareBarChartData = (
   costFields: string[],
   dimensionFields: string[],
 ): ChartData => {
-  // Create labels from dimension fields
-  const labels = records.map((r) =>
-    dimensionFields.length > 0
-      ? dimensionFields.map((f) => r[f]).join(" - ")
-      : "Record",
-  );
+  // Get optimized dimension labels (only varying fields)
+  const varyingDimensions = optimizeDimensionLabels(records, dimensionFields);
+
+  // Create labels from varying dimension fields only
+  const labels = records.map((r) => {
+    if (Object.keys(varyingDimensions).length === 0) {
+      return `Record ${records.indexOf(r) + 1}`;
+    }
+    return Object.keys(varyingDimensions)
+      .map((f) => r[f])
+      .join(" - ");
+  });
 
   // Create datasets for each cost field
   const datasets: ChartDataset[] = costFields.map((costField, idx) => ({

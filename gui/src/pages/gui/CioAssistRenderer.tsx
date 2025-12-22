@@ -294,6 +294,9 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
               border: "1px solid #e5e7eb",
               padding: "20px",
               backgroundColor: "#f9fafb",
+              minHeight: "500px",
+              display: "flex",
+              alignItems: "center",
             }}
           >
             {chartType === "line" ? (
@@ -301,10 +304,10 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                 data={chartData}
                 options={{
                   responsive: true,
-                  maintainAspectRatio: true,
+                  maintainAspectRatio: false,
                   plugins: {
                     legend: {
-                      position: "top" as const,
+                      position: "bottom" as const,
                       labels: {
                         padding: 15,
                         font: { size: 12 },
@@ -340,10 +343,10 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                 data={chartData}
                 options={{
                   responsive: true,
-                  maintainAspectRatio: true,
+                  maintainAspectRatio: false,
                   plugins: {
                     legend: {
-                      position: "top" as const,
+                      position: "bottom" as const,
                       labels: {
                         padding: 15,
                         font: { size: 12 },

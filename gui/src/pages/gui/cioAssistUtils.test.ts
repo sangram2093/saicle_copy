@@ -136,9 +136,47 @@ describe("cioAssistUtils", () => {
       expect(chartType).toBe("bar");
     });
 
-    it("should return line chart when dates are varying", () => {
+    it("should return bar chart when dates are varying (up to 3 unique dates)", () => {
       const fieldTypes = classifyFields(varyingDateRecords);
       const chartType = determineChartType(varyingDateRecords, fieldTypes);
+      expect(chartType).toBe("bar");
+    });
+
+    it("should return line chart when dates are varying (more than 3 unique dates)", () => {
+      const manyDatesRecords = [
+        {
+          "allocated cost": 29999.02,
+          "business unit": "Investment bank",
+          cio: "denis.roux@db.com",
+          "reporting period end date": "2025-09-01",
+        },
+        {
+          "allocated cost": 25000.5,
+          "business unit": "Investment bank",
+          cio: "denis.roux@db.com",
+          "reporting period end date": "2025-10-01",
+        },
+        {
+          "allocated cost": 30000.0,
+          "business unit": "Investment bank",
+          cio: "denis.roux@db.com",
+          "reporting period end date": "2025-11-01",
+        },
+        {
+          "allocated cost": 27000.0,
+          "business unit": "Investment bank",
+          cio: "denis.roux@db.com",
+          "reporting period end date": "2025-12-01",
+        },
+        {
+          "allocated cost": 31000.0,
+          "business unit": "Investment bank",
+          cio: "denis.roux@db.com",
+          "reporting period end date": "2026-01-01",
+        },
+      ];
+      const fieldTypes = classifyFields(manyDatesRecords);
+      const chartType = determineChartType(manyDatesRecords, fieldTypes);
       expect(chartType).toBe("line");
     });
 

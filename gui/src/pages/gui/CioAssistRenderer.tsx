@@ -132,6 +132,7 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
           processedRecords,
           costFields,
           dimensionFields,
+          dateFields.length > 0 ? dateFields[0] : undefined,
         );
       }
 

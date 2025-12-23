@@ -86,7 +86,7 @@ export const classifyFields = (
 
 /**
  * Determine chart type based on field types and data variation
- * Returns 'line' if date field varies and cost fields exist, otherwise 'bar'
+ * Returns 'line' if date field varies (more than 3 unique dates) and cost fields exist, otherwise 'bar'
  */
 export const determineChartType = (
   records: Record<string, unknown>[],
@@ -104,35 +104,34 @@ export const determineChartType = (
     return "bar";
   }
 
-  // Check if date field values vary
-  const dateValues = records
-    .map((r) => {
-      const dateVal = r[dateFields[0]];
-      return isValidDate(dateVal)
-        ? new Date(dateVal as string).getTime()
-        : null;
-    })
-    .filter((v) => v !== null) as number[];
+  // Check unique date values
+  const uniqueDates = new Set(
+    records
+      .map((r) => {
+        const dateVal = r[dateFields[0]];
+        return isValidDate(dateVal)
+          ? new Date(dateVal as string).toISOString().split("T")[0]
+          : null;
+      })
+      .filter((v) => v !== null),
+  );
 
-  if (dateValues.length === 0) return "bar";
-
-  const minDate = Math.min(...dateValues);
-  const maxDate = Math.max(...dateValues);
-
-  // If dates vary, use line chart; otherwise use bar chart
-  return minDate !== maxDate ? "line" : "bar";
+  // Use line chart only if more than 3 unique dates, otherwise use bar chart
+  return uniqueDates.size > 3 ? "line" : "bar";
 };
 
 /**
  * Format a numeric value as Euro currency with 2 decimal places
  */
 export const formatCost = (value: number): string => {
+  // Round to 2 decimal places
+  const roundedValue = parseFloat(value.toFixed(2));
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(roundedValue);
 };
 
 /**
@@ -247,17 +246,79 @@ export const prepareLineChartData = (
 
 /**
  * Prepare data for bar chart
- * Groups records by dimension fields with cost values on Y-axis
+ * Groups records by dimension fields (excluding date field) with bars per date value
+ * For each unique dimension group, shows bars for each date value (sorted ascending)
  */
 export const prepareBarChartData = (
   records: Record<string, unknown>[],
   costFields: string[],
   dimensionFields: string[],
+  dateField?: string,
 ): ChartData => {
-  // Get optimized dimension labels (only varying fields)
+  // Filter out date field from dimension fields if it exists
+  const groupByFields = dimensionFields.filter((f) => f !== dateField);
+
+  // If there's a date field, group by other fields and create bars per date
+  if (dateField) {
+    // Get unique dates sorted ascending
+    const uniqueDates = Array.from(
+      new Set(
+        records
+          .map((r) => {
+            const dateVal = r[dateField];
+            return isValidDate(dateVal)
+              ? new Date(dateVal as string).toISOString().split("T")[0]
+              : null;
+          })
+          .filter((v) => v !== null),
+      ),
+    ).sort();
+
+    // Get unique group values
+    const groupedData = new Map<string, Map<string, number>>();
+
+    records.forEach((record) => {
+      const groupKey =
+        groupByFields.length > 0
+          ? groupByFields.map((f) => record[f]).join(" - ")
+          : "Total";
+
+      const dateKey = isValidDate(record[dateField])
+        ? new Date(record[dateField] as string).toISOString().split("T")[0]
+        : null;
+
+      if (!dateKey) return;
+
+      if (!groupedData.has(groupKey)) {
+        groupedData.set(groupKey, new Map());
+      }
+
+      const costValue = record[costFields[0]];
+      const value =
+        typeof costValue === "number" ? parseFloat(costValue.toFixed(2)) : 0;
+
+      const currentValue = groupedData.get(groupKey)?.get(dateKey) || 0;
+      groupedData.get(groupKey)?.set(dateKey, currentValue + value);
+    });
+
+    // Create datasets for each group
+    const datasets: ChartDataset[] = Array.from(groupedData.entries()).map(
+      ([groupKey, dateValues], idx) => ({
+        label: groupKey,
+        data: uniqueDates.map((date) => dateValues.get(date) || 0),
+        backgroundColor: generateColor(idx),
+      }),
+    );
+
+    return {
+      labels: uniqueDates,
+      datasets: datasets,
+    };
+  }
+
+  // Original logic for bar chart without date field
   const varyingDimensions = optimizeDimensionLabels(records, dimensionFields);
 
-  // Create labels from varying dimension fields only
   const labels = records.map((r) => {
     if (Object.keys(varyingDimensions).length === 0) {
       return `Record ${records.indexOf(r) + 1}`;
@@ -267,7 +328,6 @@ export const prepareBarChartData = (
       .join(" - ");
   });
 
-  // Create datasets for each cost field
   const datasets: ChartDataset[] = costFields.map((costField, idx) => ({
     label: costField,
     data: records.map((r) => {

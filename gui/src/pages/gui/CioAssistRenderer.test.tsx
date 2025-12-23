@@ -12,7 +12,9 @@ describe("CioAssistRenderer", () => {
 
   const varyingDateJsonLines = `{"allocated cost": 29999.02, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2025-09-01T00:00:00+05:30"}
 {"allocated cost": 25000.50, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2025-10-01T00:00:00+05:30"}
-{"allocated cost": 30000.0, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2025-11-01T00:00:00+05:30"}`;
+{"allocated cost": 30000.0, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2025-11-01T00:00:00+05:30"}
+{"allocated cost": 27000.0, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2025-12-01T00:00:00+05:30"}
+{"allocated cost": 31000.0, "business unit": "Investment bank", "cio":"denis.roux@db.com", "reporting period end date":"2026-01-01T00:00:00+05:30"}`;
 
   it("should render error when tool name does not contain cio_assist", () => {
     render(

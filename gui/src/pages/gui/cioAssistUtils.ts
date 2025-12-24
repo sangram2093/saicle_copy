@@ -125,6 +125,7 @@ export const determineChartType = (
  */
 export const formatCost = (value: number): string => {
   // Round to 2 decimal places
+  if (isNaN(value) || value === null) return "€0.00";
   const roundedValue = parseFloat(value.toFixed(2));
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
@@ -366,4 +367,56 @@ export const processRecords = (
       {} as Record<string, unknown>,
     ),
   }));
+};
+
+/**
+ * Determine data representation format used by CioAssistRenderer
+ * Returns information about whether table and/or chart is displayed
+ */
+export interface DataRepresentationInfo {
+  hasTable: boolean;
+  hasChart: boolean;
+  representationMessage: string;
+}
+
+export const getDataRepresentationInfo = (
+  recordCount: number,
+  chartData: any,
+): DataRepresentationInfo => {
+  const hasTable = recordCount > 1;
+  const hasChart = chartData !== null;
+
+  let representationMessage = "The tool output has been presented as: ";
+
+  if (hasTable && hasChart) {
+    representationMessage +=
+      "both a data table and a chart visualization. The table shows the raw data, and the chart provides a visual representation. ";
+    representationMessage +=
+      "If you can provide additional value-added observations or insights based on the data patterns visible in both formats, please share them. ";
+    representationMessage +=
+      "Otherwise, no need to provide the data in table format as markdown.";
+  } else if (hasTable && !hasChart) {
+    representationMessage +=
+      "a data table. If you can provide additional value-added observations or insights based on the tabular data, please share them. ";
+    representationMessage +=
+      "Otherwise, no need to reproduce the table as markdown.";
+  } else if (!hasTable && hasChart) {
+    representationMessage +=
+      "a chart visualization. Since there is only one row of data, a table view was not shown. ";
+    representationMessage +=
+      "If you can provide additional value-added observations or insights based on the chart, please share them. ";
+    representationMessage +=
+      "Otherwise, no need to provide the data in any additional format.";
+  } else {
+    representationMessage +=
+      "neither a table nor a chart (insufficient data). ";
+    representationMessage +=
+      "Please provide any relevant observations if possible.";
+  }
+
+  return {
+    hasTable,
+    hasChart,
+    representationMessage,
+  };
 };

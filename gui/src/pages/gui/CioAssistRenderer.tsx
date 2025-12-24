@@ -14,13 +14,14 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Bar, Line } from "react-chartjs-2";
 import {
   classifyFields,
   determineChartType,
   FieldTypes,
   formatCost,
+  getDataRepresentationInfo,
   prepareBarChartData,
   prepareLineChartData,
   processRecords,
@@ -41,6 +42,11 @@ ChartJS.register(
 interface CioAssistRendererProps {
   jsonLines: string;
   toolName: string;
+  onRepresentationChange?: (info: {
+    hasTable: boolean;
+    hasChart: boolean;
+    representationMessage: string;
+  }) => void;
 }
 
 interface RenderState {
@@ -49,6 +55,11 @@ interface RenderState {
   chartType: "line" | "bar" | null;
   chartData: any;
   error: string | null;
+  representationInfo?: {
+    hasTable: boolean;
+    hasChart: boolean;
+    representationMessage: string;
+  };
 }
 
 /**
@@ -57,6 +68,7 @@ interface RenderState {
 export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
   jsonLines,
   toolName,
+  onRepresentationChange,
 }) => {
   const renderState = useMemo<RenderState>(() => {
     try {
@@ -142,6 +154,10 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
         chartType,
         chartData,
         error: null,
+        representationInfo: getDataRepresentationInfo(
+          processedRecords.length,
+          chartData,
+        ),
       };
     } catch (err) {
       const errorMessage =
@@ -152,11 +168,26 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
         chartType: null,
         chartData: null,
         error: errorMessage,
+        representationInfo: undefined,
       };
     }
   }, [jsonLines, toolName]);
 
-  const { records, fieldTypes, chartType, chartData, error } = renderState;
+  const {
+    records,
+    fieldTypes,
+    chartType,
+    chartData,
+    error,
+    representationInfo,
+  } = renderState;
+
+  // Call callback when representation info changes
+  useEffect(() => {
+    if (onRepresentationChange && representationInfo) {
+      onRepresentationChange(representationInfo);
+    }
+  }, [representationInfo, onRepresentationChange]);
 
   // Render error state
   if (error) {

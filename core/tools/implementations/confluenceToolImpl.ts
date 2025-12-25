@@ -66,55 +66,63 @@ function getConfluenceConfig(config: any) {
   return confluenceConfig;
 }
 
-// Helper to build Authorization header
-function buildAuthHeader(userEmail: string, apiToken: string): string {
-  // const credentials = Buffer.from(`${userEmail}:${apiToken}`).toString(
-  //   "base64",
-  // );
-  // return `Basic ${credentials}`;
-  const authHeader = `Bearer ${Buffer.from(`${apiToken}`)}`;
-  return authHeader;
+// Helper to build Authorization headers (try Bearer then Basic)
+function buildAuthHeaders(userEmail: string, apiToken: string): string[] {
+  const bearer = `Bearer ${apiToken}`;
+  const basic = `Basic ${Buffer.from(`${userEmail}:${apiToken}`).toString("base64")}`;
+  return [bearer, basic];
 }
 
 // Helper to fetch from Confluence API
 async function confluenceApiFetch(
   path: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   method: string = "GET",
   body?: any,
 ): Promise<any> {
   const url = `${baseUrl.replace(/\/$/, "")}${path}`;
-  const headers: any = {
-    Authorization: auth,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
+  const authHeaders = Array.isArray(auth) ? auth : [auth];
+  let lastError: string | undefined;
 
-  const options: any = {
-    method,
-    headers,
-  };
+  for (const authHeader of authHeaders) {
+    const headers: any = {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
 
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+    const options: any = {
+      method,
+      headers,
+    };
 
-  const response = await fetch(url, options);
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
 
-  if (!response.ok) {
+    const response = await fetch(url, options);
+
+    if (response.ok) {
+      return response.json();
+    }
+
     const errorText = await response.text();
-    throw new Error(`Confluence API error (${response.status}): ${errorText}`);
+    lastError = `Confluence API error (${response.status}): ${errorText}`;
+    if ((response.status === 401 || response.status === 403) && authHeaders.length > 1) {
+      continue;
+    }
+    throw new Error(lastError);
   }
 
-  return response.json();
+  throw new Error(lastError || "Confluence API error: authorization failed");
 }
 
 // 1. Search Confluence using CQL
 export async function confluence_searchCQL(
   cql: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   limit: number = 25,
   start: number = 0,
 ): Promise<any> {
@@ -135,7 +143,7 @@ export async function confluence_searchCQL(
 // 2. List Confluence spaces
 export async function confluence_listSpaces(
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   limit: number = 25,
   start: number = 0,
 ): Promise<any> {
@@ -152,7 +160,7 @@ export async function confluence_listSpaces(
 export async function confluence_getSpaceDetails(
   spaceKey: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<any> {
   return confluenceApiFetch(
     `/rest/api/space/${encodeURIComponent(spaceKey)}?expand=description.plain,icon`,
@@ -165,7 +173,7 @@ export async function confluence_getSpaceDetails(
 export async function confluence_listPages(
   spaceId: number,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   limit: number = 25,
   start: number = 0,
 ): Promise<any> {
@@ -183,7 +191,7 @@ export async function confluence_listPages(
 export async function confluence_getPageDetails(
   pageId: number,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<any> {
   return confluenceApiFetch(
     `/rest/api/content/${pageId}?expand=space,version,body.storage`,
@@ -196,7 +204,7 @@ export async function confluence_getPageDetails(
 export async function confluence_getPageContent(
   pageId: number,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<{
   markdown: string;
   images: Array<{ url: string; base64: string; filename: string }>;
@@ -230,20 +238,31 @@ export async function confluence_getPageContent(
 
 // 7. Create a page
 export async function confluence_createPage(
-  spaceId: number,
+  spaceId: number | undefined,
+  spaceKey: string | undefined,
   title: string,
   content: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   parentPageId?: number,
+  diagramCode?: string,
+  introHtml?: string,
+  contentFormat?: string,
 ): Promise<any> {
-  // Convert markdown to Confluence storage format
-  const storageFormat = convertMarkdownToStorageFormat(content);
+  // Build storage format content
+  const format = (contentFormat || "markdown").toLowerCase();
+  let storageFormat =
+    format === "storage" ? content : convertMarkdownToStorageFormat(content);
+
+  if (diagramCode && diagramCode.trim().length > 0) {
+    const macro = buildConfluenceMacro(diagramCode, introHtml);
+    storageFormat = `${storageFormat || ""}\n${macro}`.trim();
+  }
 
   const body: any = {
     type: "page",
     title,
-    space: { id: spaceId },
+    space: spaceKey ? { key: spaceKey } : { id: spaceId },
     body: { storage: { value: storageFormat, representation: "storage" } },
   };
 
@@ -272,19 +291,15 @@ export async function confluence_addDiagram(
   pageId: number,
   diagramCode: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
   diagramTitle?: string,
+  introHtml?: string,
 ): Promise<any> {
   // Get current page to modify it
   const currentPage = await confluence_getPageDetails(pageId, baseUrl, auth);
 
-  // Create PlantUML macro
-  const diagramMacro = `<ac:structured-macro ac:name="plantuml">
-<ac:parameter ac:name="title">${diagramTitle || "Diagram"}</ac:parameter>
-<ac:plain-text-body><![CDATA[
-${diagramCode}
-]]></ac:plain-text-body>
-</ac:structured-macro>`;
+  // Create PlantUML macro (optionally with a title)
+  const diagramMacro = buildConfluenceMacro(diagramCode, introHtml, diagramTitle);
 
   // Append to existing content
   const updatedContent = currentPage.body.storage.value + "\n" + diagramMacro;
@@ -318,7 +333,7 @@ export async function confluence_modifyPageContent(
   pageId: number,
   content: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<any> {
   // Get current page
   const currentPage = await confluence_getPageDetails(pageId, baseUrl, auth);
@@ -355,7 +370,7 @@ export async function confluence_addPageLabel(
   pageId: number,
   label: string,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<any> {
   const url = `/rest/api/content/${pageId}/label`;
   const body = {
@@ -370,7 +385,7 @@ export async function confluence_addPageLabel(
 export async function confluence_ensureLabelOnPage(
   pageId: number,
   baseUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<boolean> {
   const DB_AI_LABEL = "db_ai_in_use";
   try {
@@ -455,6 +470,24 @@ function convertMarkdownToStorageFormat(markdown: string): string {
   return storage;
 }
 
+function buildConfluenceMacro(
+  plantumlText: string,
+  introHtml?: string,
+  diagramTitle?: string,
+): string {
+  const intro = introHtml || "<p>Auto-generated graph.</p>";
+  const titleParam = diagramTitle
+    ? `<ac:parameter ac:name="title">${diagramTitle}</ac:parameter>\n`
+    : "";
+  return `${intro}
+<ac:structured-macro ac:name="plantuml">
+  ${titleParam}<ac:plain-text-body><![CDATA[
+${plantumlText}
+  ]]></ac:plain-text-body>
+</ac:structured-macro>
+`;
+}
+
 // Helper: Extract image URLs from storage format
 function extractImageUrls(storageHtml: string): string[] {
   const imageUrls: string[] = [];
@@ -471,20 +504,31 @@ function extractImageUrls(storageHtml: string): string[] {
 // Helper: Download image and convert to base64
 async function downloadImageAsBase64(
   imageUrl: string,
-  auth: string,
+  auth: string | string[],
 ): Promise<string> {
-  const response = await fetch(imageUrl, {
-    headers: {
-      Authorization: auth,
-    },
-  });
+  const authHeaders = Array.isArray(auth) ? auth : [auth];
+  let lastError: string | undefined;
 
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.statusText}`);
+  for (const authHeader of authHeaders) {
+    const response = await fetch(imageUrl, {
+      headers: {
+        Authorization: authHeader,
+      },
+    });
+
+    if (response.ok) {
+      const buffer = await response.arrayBuffer();
+      return Buffer.from(buffer).toString("base64");
+    }
+
+    lastError = `Failed to download image: ${response.statusText}`;
+    if ((response.status === 401 || response.status === 403) && authHeaders.length > 1) {
+      continue;
+    }
+    throw new Error(lastError);
   }
 
-  const buffer = await response.arrayBuffer();
-  return Buffer.from(buffer).toString("base64");
+  throw new Error(lastError || "Failed to download image: authorization failed");
 }
 
 // Query/read-only Confluence tools
@@ -494,7 +538,7 @@ export async function handleConfluenceQueryTools(
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
   const confluenceConfig = getConfluenceConfig(extras.config);
-  const auth = buildAuthHeader(
+  const auth = buildAuthHeaders(
     confluenceConfig.userEmail,
     confluenceConfig.apiToken,
   );
@@ -609,7 +653,7 @@ export async function handleConfluenceMutatingTools(
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
   const confluenceConfig = getConfluenceConfig(extras.config);
-  const auth = buildAuthHeader(
+  const auth = buildAuthHeaders(
     confluenceConfig.userEmail,
     confluenceConfig.apiToken,
   );
@@ -618,17 +662,31 @@ export async function handleConfluenceMutatingTools(
 
   switch (functionName) {
     case BuiltInToolNames.ConfluenceCreatePage: {
-      const spaceId = getNumberArg(args, "spaceId");
+      const spaceId =
+        typeof args?.spaceId !== "undefined"
+          ? getNumberArg(args, "spaceId")
+          : undefined;
+      const spaceKey = getOptionalStringArg(args, "spaceKey", true);
       const title = getStringArg(args, "title");
-      const content = getStringArg(args, "content");
+      const content = getOptionalStringArg(args, "content") || "";
+      const contentFormat = getOptionalStringArg(args, "contentFormat", true);
       const parentPageId = getOptionalNumberArg(args, "parentPageId");
+      const diagramCode = getOptionalStringArg(args, "diagramCode");
+      const introHtml = getOptionalStringArg(args, "introHtml");
+      if (!spaceId && !spaceKey) {
+        throw new Error("Provide either spaceId or spaceKey to create a page.");
+      }
       const result = await confluence_createPage(
         spaceId,
+        spaceKey,
         title,
         content,
         baseUrl,
         auth,
         parentPageId || undefined,
+        diagramCode || undefined,
+        introHtml || undefined,
+        contentFormat || undefined,
       );
       return [
         {
@@ -644,12 +702,14 @@ export async function handleConfluenceMutatingTools(
       const pageId = getNumberArg(args, "pageId");
       const diagramCode = getStringArg(args, "diagramCode");
       const diagramTitle = getOptionalStringArg(args, "diagramTitle");
+      const introHtml = getOptionalStringArg(args, "introHtml");
       const result = await confluence_addDiagram(
         pageId,
         diagramCode,
         baseUrl,
         auth,
         diagramTitle,
+        introHtml || undefined,
       );
       return [
         {

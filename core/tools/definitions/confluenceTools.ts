@@ -160,24 +160,41 @@ export const confluenceCreatePageTool: Tool = {
   ...(confluenceBase as any),
   displayTitle: "Confluence: Create Page",
   wouldLikeTo:
-    "create a new page in Confluence space {{{ spaceId }}} with title {{{ title }}}",
+    "create a new page in Confluence space {{{ spaceKey }}} with title {{{ title }}}",
   isCurrently: "creating page",
   hasAlready: "created page",
   function: {
     name: BuiltInToolNames.ConfluenceCreatePage,
-    description: "Create a new Confluence page from markdown content",
+    description:
+      "Create a new Confluence page from markdown content (or storage format), optionally embedding a PlantUML macro.",
     parameters: {
       type: "object",
-      required: ["spaceId", "title", "content"],
+      required: ["title"],
       properties: {
+        spaceKey: {
+          type: "string",
+          description: "The space key (preferred).",
+        },
         spaceId: {
           type: "integer",
-          description: "The space ID (integer type)",
+          description: "The space ID (integer type). Provide if spaceKey is unknown.",
         },
         title: { type: "string", description: "Page title" },
         content: {
           type: "string",
-          description: "Page content in markdown format",
+          description: "Page content (markdown by default; storage if contentFormat=storage).",
+        },
+        contentFormat: {
+          type: "string",
+          description: "content format: markdown (default) or storage",
+        },
+        diagramCode: {
+          type: "string",
+          description: "Optional PlantUML code to embed on the page.",
+        },
+        introHtml: {
+          type: "string",
+          description: "Optional HTML intro to prepend before the diagram macro.",
         },
         parentPageId: {
           type: "integer",
@@ -212,6 +229,10 @@ export const confluenceAddDiagramTool: Tool = {
         diagramTitle: {
           type: "string",
           description: "Title for the diagram (optional)",
+        },
+        introHtml: {
+          type: "string",
+          description: "Optional HTML intro to prepend before the diagram macro.",
         },
       },
     },

@@ -307,7 +307,6 @@ export async function confluence_addDiagram(
   const updateBody = {
     type: "page",
     title: currentPage.title,
-    space: { id: currentPage.space.id },
     body: { storage: { value: updatedContent, representation: "storage" } },
     version: { number: currentPage.version.number + 1 },
   };
@@ -344,7 +343,6 @@ export async function confluence_modifyPageContent(
   const updateBody = {
     type: "page",
     title: currentPage.title,
-    space: { id: currentPage.space.id },
     body: { storage: { value: storageFormat, representation: "storage" } },
     version: { number: currentPage.version.number + 1 },
   };

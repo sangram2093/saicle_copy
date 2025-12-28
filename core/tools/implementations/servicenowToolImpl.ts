@@ -1200,16 +1200,30 @@ export async function handleServiceNowTools(
 
     case BuiltInToolNames.ServiceNowGetChangeRequestDetails: {
       const changeId = getStringArg(args, "change_id");
+      let changeSysId: string;
+      try {
+        changeSysId = await resolveRecordSysId(
+          extras,
+          config,
+          "change_request",
+          changeId,
+        );
+      } catch (error) {
+        return toContextItem(extras, "Change request not found", {
+          success: false,
+          message: `${error}`,
+        });
+      }
       const change = await serviceNowRequest(extras, config, {
         method: "GET",
-        path: `/table/change_request/${changeId}`,
+        path: `/table/change_request/${changeSysId}`,
         query: { sysparm_display_value: "true" },
       });
       const tasks = await serviceNowRequest(extras, config, {
         method: "GET",
         path: "/table/change_task",
         query: {
-          sysparm_query: `change_request=${changeId}`,
+          sysparm_query: `change_request=${changeSysId}`,
           sysparm_display_value: "true",
         },
       });

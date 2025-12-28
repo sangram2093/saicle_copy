@@ -590,6 +590,22 @@ export async function handleServiceNowTools(
       const assignedTo = getOptionalStringArg(args, "assigned_to");
       const assignedToEmail = getOptionalStringArg(args, "assigned_to_email");
       const assignedToName = getOptionalStringArg(args, "assigned_to_name");
+      const assignedToCostCenter = getOptionalStringArg(
+        args,
+        "assigned_to_cost_center",
+      );
+      const assignedToCostCenterName = getOptionalStringArg(
+        args,
+        "assigned_to_cost_center_name",
+      );
+      const assignedToLocation = getOptionalStringArg(
+        args,
+        "assigned_to_location",
+      );
+      const assignedToLocationName = getOptionalStringArg(
+        args,
+        "assigned_to_location_name",
+      );
       const assignmentGroup = getOptionalStringArg(args, "assignment_group");
       const assignmentGroupName = getOptionalStringArg(
         args,
@@ -610,6 +626,18 @@ export async function handleServiceNowTools(
       }
       if (assignedToName) {
         filters.push(`assigned_to.nameLIKE${assignedToName}`);
+      }
+      if (assignedToCostCenter) {
+        filters.push(`assigned_to.cost_center=${assignedToCostCenter}`);
+      }
+      if (assignedToCostCenterName) {
+        filters.push(`assigned_to.cost_center.nameLIKE${assignedToCostCenterName}`);
+      }
+      if (assignedToLocation) {
+        filters.push(`assigned_to.location=${assignedToLocation}`);
+      }
+      if (assignedToLocationName) {
+        filters.push(`assigned_to.location.nameLIKE${assignedToLocationName}`);
       }
       if (assignmentGroup) filters.push(`assignment_group=${assignmentGroup}`);
       if (assignmentGroupName) {

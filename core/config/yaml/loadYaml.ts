@@ -1841,7 +1841,9 @@ function extractServiceNowConfigInFlow(
   localErrors: ConfigValidationError[],
 ) {
   try {
-    const servicenowCfg = extractOptionalServiceNowConfig(config);
+    const servicenowCfg = extractOptionalServiceNowConfig(
+      config as AssistantUnrolled,
+    );
     if (
       servicenowCfg &&
       (servicenowCfg.instanceUrl ||

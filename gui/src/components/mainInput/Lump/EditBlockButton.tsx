@@ -6,7 +6,14 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
 type SectionKey = Exclude<
   keyof ConfigYaml,
-  "name" | "version" | "schema" | "metadata" | "env" | "jira" | "confluence"
+  | "name"
+  | "version"
+  | "schema"
+  | "metadata"
+  | "env"
+  | "jira"
+  | "confluence"
+  | "servicenow"
 >;
 
 interface EditBlockButtonProps<T extends SectionKey> {

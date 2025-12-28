@@ -1465,7 +1465,7 @@ function extractServiceNowConfigInFlow(
       | {
           instanceUrl?: string;
           auth?: {
-            type?: string;
+            type?: "basic" | "oauth" | "api_key";
             basic?: { username?: string; password?: string };
             oauth?: {
               clientId?: string;
@@ -1893,10 +1893,19 @@ function extractServiceNowConfigInFlow(
 }
 
 function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
+  const authTypes = ["basic", "oauth", "api_key"] as const;
+  type ServiceNowAuthType = (typeof authTypes)[number];
+  const toAuthType = (value?: string): ServiceNowAuthType | undefined => {
+    if (!value) return undefined;
+    return authTypes.includes(value as ServiceNowAuthType)
+      ? (value as ServiceNowAuthType)
+      : undefined;
+  };
+
   const servicenow: {
     instanceUrl?: string;
     auth?: {
-      type?: string;
+      type?: ServiceNowAuthType;
       basic?: { username?: string; password?: string };
       oauth?: {
         clientId?: string;
@@ -1930,7 +1939,7 @@ function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
         const oauthBlock = block.auth.oauth;
         const apiKeyBlock = block.auth.apiKey || block.auth.api_key;
         servicenow.auth = {
-          type: block.auth.type ? String(block.auth.type) : undefined,
+          type: toAuthType(block.auth.type ? String(block.auth.type) : undefined),
           basic: block.auth.basic
             ? {
                 username: block.auth.basic.username
@@ -1996,7 +2005,7 @@ function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
         servicenow.timeout = Number(envMap.SERVICENOW_TIMEOUT);
       if (!servicenow.auth) servicenow.auth = {};
       if (!servicenow.auth.type && envMap.SERVICENOW_AUTH_TYPE)
-        servicenow.auth.type = String(envMap.SERVICENOW_AUTH_TYPE);
+        servicenow.auth.type = toAuthType(String(envMap.SERVICENOW_AUTH_TYPE));
       if (
         servicenow.auth.type === "basic" ||
         (!servicenow.auth.type &&
@@ -2063,7 +2072,7 @@ function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
       servicenow.timeout = Number(asAny.servicenow_timeout);
     if (!servicenow.auth) servicenow.auth = {};
     if (!servicenow.auth.type && asAny.servicenow_auth_type)
-      servicenow.auth.type = String(asAny.servicenow_auth_type);
+      servicenow.auth.type = toAuthType(String(asAny.servicenow_auth_type));
     if (asAny.servicenow_username || asAny.servicenow_password) {
       servicenow.auth.basic = {
         username: asAny.servicenow_username

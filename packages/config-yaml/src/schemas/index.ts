@@ -109,6 +109,52 @@ export const confluenceSchema = z.object({
   apiToken: z.string(),
 });
 
+export const serviceNowSchema = z
+  .object({
+    instanceUrl: z.string().optional(),
+    instance_url: z.string().optional(),
+    auth: z.object({
+      type: z.enum(["basic", "oauth", "api_key"]),
+      basic: z
+        .object({
+          username: z.string().optional(),
+          password: z.string().optional(),
+        })
+        .optional(),
+      oauth: z
+        .object({
+          clientId: z.string().optional(),
+          client_id: z.string().optional(),
+          clientSecret: z.string().optional(),
+          client_secret: z.string().optional(),
+          username: z.string().optional(),
+          password: z.string().optional(),
+          tokenUrl: z.string().optional(),
+          token_url: z.string().optional(),
+        })
+        .optional(),
+      apiKey: z
+        .object({
+          apiKey: z.string().optional(),
+          api_key: z.string().optional(),
+          headerName: z.string().optional(),
+          header_name: z.string().optional(),
+        })
+        .optional(),
+      api_key: z
+        .object({
+          api_key: z.string().optional(),
+          header_name: z.string().optional(),
+        })
+        .optional(),
+    }),
+    timeout: z.number().optional(),
+  })
+  .refine((value) => Boolean(value.instanceUrl || value.instance_url), {
+    message: "servicenow.instanceUrl (or servicenow.instance_url) is required",
+    path: ["instanceUrl"],
+  });
+
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
   sourceCodeUrl: z.string().optional(),
@@ -131,6 +177,7 @@ export const baseConfigYamlSchema = z.object({
   env: envRecord.optional(),
   jira: jiraSchema.optional(),
   confluence: confluenceSchema.optional(),
+  servicenow: serviceNowSchema.optional(),
 });
 
 const modelsUsesSchema = z

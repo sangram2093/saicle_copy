@@ -365,6 +365,7 @@ export async function unrollBlocks(
     version: assistant.version,
     jira: assistant.jira,
     confluence: assistant.confluence,
+    servicenow: assistant.servicenow,
   };
 
   const sections: (keyof Omit<
@@ -377,6 +378,7 @@ export async function unrollBlocks(
     | "env"
     | "jira"
     | "confluence"
+    | "servicenow"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel

@@ -1240,6 +1240,35 @@ declare global {
       apiToken?: string;
       authEmail?: string;
     };
+    // Optional Confluence configuration from config.yaml
+    confluence?: {
+      confluenceBaseUrl?: string;
+      apiToken?: string;
+      userEmail?: string;
+    };
+    // Optional ServiceNow configuration from config.yaml
+    servicenow?: {
+      instanceUrl?: string;
+      timeout?: number;
+      auth?: {
+        type?: "basic" | "oauth" | "api_key";
+        basic?: {
+          username?: string;
+          password?: string;
+        };
+        oauth?: {
+          clientId?: string;
+          clientSecret?: string;
+          username?: string;
+          password?: string;
+          tokenUrl?: string;
+        };
+        apiKey?: {
+          apiKey?: string;
+          headerName?: string;
+        };
+      };
+    };
   }
   
   export interface BrowserSerializedDbSaicleConfig {

@@ -414,6 +414,8 @@ async function configYamlToDbSaicleConfig(options: {
   extractJiraConfigInFlow(config, dbsaicleConfig, localErrors);
   // Extract optional confluence configuration from the unrolled YAML and attach to the runtime config
   extractConfluenceConfigInFlow(config, dbsaicleConfig, localErrors);
+  // Extract optional ServiceNow configuration from the unrolled YAML and attach to the runtime config
+  extractServiceNowConfigInFlow(config, dbsaicleConfig, localErrors);
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
   const orgPolicy = PolicySingleton.getInstance().policy;
@@ -1419,6 +1421,699 @@ function extractOptionalConfluenceConfig(config: AssistantUnrolled) {
   }
 
   return confluence;
+}
+
+function extractServiceNowConfigInFlow(
+  config: {
+    name: string;
+    version: string;
+    env?: Record<string, string | number | boolean> | undefined;
+    schema?: string | undefined;
+    rules?:
+      | (
+          | string
+          | {
+              name: string;
+              rule: string;
+              regex?: string | string[] | undefined;
+              sourceFile?: string | undefined;
+              description?: string | undefined;
+              globs?: string | string[] | undefined;
+              alwaysApply?: boolean | undefined;
+              invokable?: boolean | undefined;
+            }
+        )[]
+      | undefined;
+    context?:
+      | { provider: string; params?: any; name?: string | undefined }[]
+      | undefined;
+    metadata?:
+      | (Record<string, string> & {
+          description?: string | undefined;
+          author?: string | undefined;
+          license?: string | undefined;
+          tags?: string | undefined;
+          sourceCodeUrl?: string | undefined;
+          iconUrl?: string | undefined;
+        })
+      | undefined;
+    jira?: { domain: string; apiToken: string; authEmail: string } | undefined;
+    confluence?:
+      | { apiToken: string; confluenceBaseUrl: string; userEmail: string }
+      | undefined;
+    servicenow?:
+      | {
+          instanceUrl?: string;
+          auth?: {
+            type?: string;
+            basic?: { username?: string; password?: string };
+            oauth?: {
+              clientId?: string;
+              clientSecret?: string;
+              username?: string;
+              password?: string;
+              tokenUrl?: string;
+            };
+            apiKey?: { apiKey?: string; headerName?: string };
+          };
+          timeout?: number;
+        }
+      | undefined;
+    models?:
+      | (
+          | {
+              provider: "dbsaicle-proxy";
+              orgScopeId: string | null;
+              onPremProxyUrl: string | null;
+              name: string;
+              model: string;
+              apiKeyLocation?: string | undefined;
+              envSecretLocations?: Record<string, string> | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+            }
+          | {
+              provider: string;
+              name: string;
+              model: string;
+              email?: string | undefined;
+              apiKey?: string | undefined;
+              apiBase?: string | undefined;
+              maxStopWords?: number | undefined;
+              roles?:
+                | (
+                    | "chat"
+                    | "autocomplete"
+                    | "embed"
+                    | "rerank"
+                    | "edit"
+                    | "apply"
+                    | "summarize"
+                  )[]
+                | undefined;
+              capabilities?: string[] | undefined;
+              defaultCompletionOptions?:
+                | {
+                    contextLength?: number | undefined;
+                    maxTokens?: number | undefined;
+                    temperature?: number | undefined;
+                    topP?: number | undefined;
+                    topK?: number | undefined;
+                    minP?: number | undefined;
+                    presencePenalty?: number | undefined;
+                    frequencyPenalty?: number | undefined;
+                    stop?: string[] | undefined;
+                    n?: number | undefined;
+                    reasoning?: boolean | undefined;
+                    reasoningBudgetTokens?: number | undefined;
+                    promptCaching?: boolean | undefined;
+                    stream?: boolean | undefined;
+                  }
+                | undefined;
+              cacheBehavior?:
+                | {
+                    cacheSystemMessage?: boolean | undefined;
+                    cacheConversation?: boolean | undefined;
+                  }
+                | undefined;
+              requestOptions?:
+                | {
+                    timeout?: number | undefined;
+                    verifySsl?: boolean | undefined;
+                    caBundlePath?: string | string[] | undefined;
+                    proxy?: string | undefined;
+                    headers?: Record<string, string> | undefined;
+                    extraBodyProperties?: Record<string, any> | undefined;
+                    noProxy?: string[] | undefined;
+                    clientCertificate?:
+                      | {
+                          cert: string;
+                          key: string;
+                          passphrase?: string | undefined;
+                        }
+                      | undefined;
+                  }
+                | undefined;
+              embedOptions?:
+                | {
+                    maxChunkSize?: number | undefined;
+                    maxBatchSize?: number | undefined;
+                    embeddingPrefixes?:
+                      | Partial<Record<"chunk" | "query", string>>
+                      | undefined;
+                  }
+                | undefined;
+              chatOptions?:
+                | {
+                    baseSystemMessage?: string | undefined;
+                    baseAgentSystemMessage?: string | undefined;
+                    basePlanSystemMessage?: string | undefined;
+                  }
+                | undefined;
+              promptTemplates?:
+                | {
+                    chat?:
+                      | "llama2"
+                      | "alpaca"
+                      | "zephyr"
+                      | "phi2"
+                      | "phind"
+                      | "anthropic"
+                      | "chatml"
+                      | "none"
+                      | "openchat"
+                      | "deepseek"
+                      | "xwin-coder"
+                      | "neural-chat"
+                      | "codellama-70b"
+                      | "llava"
+                      | "gemma"
+                      | "granite"
+                      | "llama3"
+                      | "codestral"
+                      | undefined;
+                    autocomplete?: string | undefined;
+                    edit?: string | undefined;
+                    apply?: string | undefined;
+                  }
+                | undefined;
+              useLegacyCompletionsEndpoint?: boolean | undefined;
+              env?: Record<string, string | number | boolean> | undefined;
+              autocompleteOptions?:
+                | {
+                    disable?: boolean | undefined;
+                    maxPromptTokens?: number | undefined;
+                    debounceDelay?: number | undefined;
+                    modelTimeout?: number | undefined;
+                    maxSuffixPercentage?: number | undefined;
+                    prefixPercentage?: number | undefined;
+                    transform?: boolean | undefined;
+                    template?: string | undefined;
+                    onlyMyCode?: boolean | undefined;
+                    useCache?: boolean | undefined;
+                    useImports?: boolean | undefined;
+                    useRecentlyEdited?: boolean | undefined;
+                    useRecentlyOpened?: boolean | undefined;
+                    experimental_includeClipboard?: boolean | undefined;
+                    experimental_includeRecentlyVisitedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeRecentlyEditedRanges?:
+                      | boolean
+                      | undefined;
+                    experimental_includeDiff?: boolean | undefined;
+                    experimental_enableStaticContextualization?:
+                      | boolean
+                      | undefined;
+                  }
+                | undefined;
+            }
+        )[]
+      | undefined;
+    data?:
+      | {
+          name: string;
+          schema: string;
+          destination: string;
+          apiKey?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          level?: "all" | "noCode" | undefined;
+          events?: string[] | undefined;
+        }[]
+      | undefined;
+    mcpServers?:
+      | {
+          name: string;
+          type?: "sse" | "stdio" | "streamable-http" | undefined;
+          url?: string | undefined;
+          requestOptions?:
+            | {
+                timeout?: number | undefined;
+                verifySsl?: boolean | undefined;
+                caBundlePath?: string | string[] | undefined;
+                proxy?: string | undefined;
+                headers?: Record<string, string> | undefined;
+                extraBodyProperties?: Record<string, any> | undefined;
+                noProxy?: string[] | undefined;
+                clientCertificate?:
+                  | {
+                      cert: string;
+                      key: string;
+                      passphrase?: string | undefined;
+                    }
+                  | undefined;
+              }
+            | undefined;
+          env?: Record<string, string> | undefined;
+          sourceFile?: string | undefined;
+          command?: string | undefined;
+          faviconUrl?: string | undefined;
+          args?: string[] | undefined;
+          cwd?: string | undefined;
+          connectionTimeout?: number | undefined;
+        }[]
+      | undefined;
+    prompts?:
+      | {
+          name: string;
+          prompt: string;
+          sourceFile?: string | undefined;
+          description?: string | undefined;
+        }[]
+      | undefined;
+    docs?:
+      | {
+          name: string;
+          startUrl: string;
+          sourceFile?: string | undefined;
+          faviconUrl?: string | undefined;
+          rootUrl?: string | undefined;
+          useLocalCrawling?: boolean | undefined;
+        }[]
+      | undefined;
+  },
+  dbsaicleConfig: DbSaicleConfig,
+  localErrors: ConfigValidationError[],
+) {
+  try {
+    const servicenowCfg = extractOptionalServiceNowConfig(config);
+    if (
+      servicenowCfg &&
+      (servicenowCfg.instanceUrl ||
+        servicenowCfg.auth?.type ||
+        servicenowCfg.timeout)
+    ) {
+      dbsaicleConfig.servicenow = servicenowCfg;
+      if (!servicenowCfg.instanceUrl || !servicenowCfg.auth?.type) {
+        localErrors.push({
+          fatal: false,
+          message:
+            "Partial ServiceNow configuration found in config.yaml; provide a root `servicenow` block with `instanceUrl` and `auth.type` (or set equivalent env vars) for full functionality.",
+        });
+      } else if (servicenowCfg.auth.type === "basic") {
+        if (
+          !servicenowCfg.auth.basic?.username ||
+          !servicenowCfg.auth.basic?.password
+        ) {
+          localErrors.push({
+            fatal: false,
+            message:
+              "ServiceNow auth type 'basic' requires `auth.basic.username` and `auth.basic.password`.",
+          });
+        }
+      } else if (servicenowCfg.auth.type === "oauth") {
+        if (
+          !servicenowCfg.auth.oauth?.clientId ||
+          !servicenowCfg.auth.oauth?.clientSecret
+        ) {
+          localErrors.push({
+            fatal: false,
+            message:
+              "ServiceNow auth type 'oauth' requires `auth.oauth.clientId` and `auth.oauth.clientSecret`.",
+          });
+        }
+      } else if (servicenowCfg.auth.type === "api_key") {
+        if (!servicenowCfg.auth.apiKey?.apiKey) {
+          localErrors.push({
+            fatal: false,
+            message:
+              "ServiceNow auth type 'api_key' requires `auth.apiKey.apiKey`.",
+          });
+        }
+      }
+    }
+  } catch (e) {
+    // ignore extraction errors
+  }
+}
+
+function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
+  const servicenow: {
+    instanceUrl?: string;
+    auth?: {
+      type?: string;
+      basic?: { username?: string; password?: string };
+      oauth?: {
+        clientId?: string;
+        clientSecret?: string;
+        username?: string;
+        password?: string;
+        tokenUrl?: string;
+      };
+      apiKey?: { apiKey?: string; headerName?: string };
+    };
+    timeout?: number;
+  } = {};
+
+  try {
+    const asAny = config as any;
+    const block = asAny.servicenow as
+      | {
+          instanceUrl?: string;
+          instance_url?: string;
+          auth?: any;
+          timeout?: number;
+        }
+      | undefined;
+    if (block) {
+      if (block.instanceUrl) servicenow.instanceUrl = String(block.instanceUrl);
+      if (!servicenow.instanceUrl && block.instance_url) {
+        servicenow.instanceUrl = String(block.instance_url);
+      }
+      if (block.timeout) servicenow.timeout = Number(block.timeout);
+      if (block.auth) {
+        const oauthBlock = block.auth.oauth;
+        const apiKeyBlock = block.auth.apiKey || block.auth.api_key;
+        servicenow.auth = {
+          type: block.auth.type ? String(block.auth.type) : undefined,
+          basic: block.auth.basic
+            ? {
+                username: block.auth.basic.username
+                  ? String(block.auth.basic.username)
+                  : undefined,
+                password: block.auth.basic.password
+                  ? String(block.auth.basic.password)
+                  : undefined,
+              }
+            : undefined,
+          oauth: oauthBlock
+            ? {
+                clientId: oauthBlock.clientId
+                  ? String(oauthBlock.clientId)
+                  : oauthBlock.client_id
+                    ? String(oauthBlock.client_id)
+                    : undefined,
+                clientSecret: oauthBlock.clientSecret
+                  ? String(oauthBlock.clientSecret)
+                  : oauthBlock.client_secret
+                    ? String(oauthBlock.client_secret)
+                    : undefined,
+                username: oauthBlock.username
+                  ? String(oauthBlock.username)
+                  : undefined,
+                password: oauthBlock.password
+                  ? String(oauthBlock.password)
+                  : undefined,
+                tokenUrl: oauthBlock.tokenUrl
+                  ? String(oauthBlock.tokenUrl)
+                  : oauthBlock.token_url
+                    ? String(oauthBlock.token_url)
+                    : undefined,
+              }
+            : undefined,
+          apiKey: apiKeyBlock
+            ? {
+                apiKey: apiKeyBlock.apiKey
+                  ? String(apiKeyBlock.apiKey)
+                  : apiKeyBlock.api_key
+                    ? String(apiKeyBlock.api_key)
+                    : undefined,
+                headerName: apiKeyBlock.headerName
+                  ? String(apiKeyBlock.headerName)
+                  : apiKeyBlock.header_name
+                    ? String(apiKeyBlock.header_name)
+                    : undefined,
+              }
+            : undefined,
+        };
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const envMap = (config as any).env as Record<string, any> | undefined;
+    if (envMap) {
+      if (!servicenow.instanceUrl && envMap.SERVICENOW_INSTANCE_URL)
+        servicenow.instanceUrl = String(envMap.SERVICENOW_INSTANCE_URL);
+      if (!servicenow.timeout && envMap.SERVICENOW_TIMEOUT)
+        servicenow.timeout = Number(envMap.SERVICENOW_TIMEOUT);
+      if (!servicenow.auth) servicenow.auth = {};
+      if (!servicenow.auth.type && envMap.SERVICENOW_AUTH_TYPE)
+        servicenow.auth.type = String(envMap.SERVICENOW_AUTH_TYPE);
+      if (
+        servicenow.auth.type === "basic" ||
+        (!servicenow.auth.type &&
+          (envMap.SERVICENOW_USERNAME || envMap.SERVICENOW_PASSWORD))
+      ) {
+        servicenow.auth.type = servicenow.auth.type || "basic";
+        servicenow.auth.basic = {
+          username: envMap.SERVICENOW_USERNAME
+            ? String(envMap.SERVICENOW_USERNAME)
+            : servicenow.auth.basic?.username,
+          password: envMap.SERVICENOW_PASSWORD
+            ? String(envMap.SERVICENOW_PASSWORD)
+            : servicenow.auth.basic?.password,
+        };
+      }
+      if (
+        servicenow.auth.type === "oauth" ||
+        (!servicenow.auth.type &&
+          (envMap.SERVICENOW_CLIENT_ID || envMap.SERVICENOW_CLIENT_SECRET))
+      ) {
+        servicenow.auth.type = servicenow.auth.type || "oauth";
+        servicenow.auth.oauth = {
+          clientId: envMap.SERVICENOW_CLIENT_ID
+            ? String(envMap.SERVICENOW_CLIENT_ID)
+            : servicenow.auth.oauth?.clientId,
+          clientSecret: envMap.SERVICENOW_CLIENT_SECRET
+            ? String(envMap.SERVICENOW_CLIENT_SECRET)
+            : servicenow.auth.oauth?.clientSecret,
+          username: envMap.SERVICENOW_USERNAME
+            ? String(envMap.SERVICENOW_USERNAME)
+            : servicenow.auth.oauth?.username,
+          password: envMap.SERVICENOW_PASSWORD
+            ? String(envMap.SERVICENOW_PASSWORD)
+            : servicenow.auth.oauth?.password,
+          tokenUrl: envMap.SERVICENOW_TOKEN_URL
+            ? String(envMap.SERVICENOW_TOKEN_URL)
+            : servicenow.auth.oauth?.tokenUrl,
+        };
+      }
+      if (
+        servicenow.auth.type === "api_key" ||
+        (!servicenow.auth.type && envMap.SERVICENOW_API_KEY)
+      ) {
+        servicenow.auth.type = servicenow.auth.type || "api_key";
+        servicenow.auth.apiKey = {
+          apiKey: envMap.SERVICENOW_API_KEY
+            ? String(envMap.SERVICENOW_API_KEY)
+            : servicenow.auth.apiKey?.apiKey,
+          headerName: envMap.SERVICENOW_API_KEY_HEADER
+            ? String(envMap.SERVICENOW_API_KEY_HEADER)
+            : servicenow.auth.apiKey?.headerName,
+        };
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const asAny = config as any;
+    if (!servicenow.instanceUrl && asAny.servicenow_instance_url)
+      servicenow.instanceUrl = String(asAny.servicenow_instance_url);
+    if (!servicenow.timeout && asAny.servicenow_timeout)
+      servicenow.timeout = Number(asAny.servicenow_timeout);
+    if (!servicenow.auth) servicenow.auth = {};
+    if (!servicenow.auth.type && asAny.servicenow_auth_type)
+      servicenow.auth.type = String(asAny.servicenow_auth_type);
+    if (asAny.servicenow_username || asAny.servicenow_password) {
+      servicenow.auth.basic = {
+        username: asAny.servicenow_username
+          ? String(asAny.servicenow_username)
+          : servicenow.auth.basic?.username,
+        password: asAny.servicenow_password
+          ? String(asAny.servicenow_password)
+          : servicenow.auth.basic?.password,
+      };
+    }
+    if (asAny.servicenow_client_id || asAny.servicenow_client_secret) {
+      servicenow.auth.oauth = {
+        clientId: asAny.servicenow_client_id
+          ? String(asAny.servicenow_client_id)
+          : servicenow.auth.oauth?.clientId,
+        clientSecret: asAny.servicenow_client_secret
+          ? String(asAny.servicenow_client_secret)
+          : servicenow.auth.oauth?.clientSecret,
+        username: asAny.servicenow_username
+          ? String(asAny.servicenow_username)
+          : servicenow.auth.oauth?.username,
+        password: asAny.servicenow_password
+          ? String(asAny.servicenow_password)
+          : servicenow.auth.oauth?.password,
+        tokenUrl: asAny.servicenow_token_url
+          ? String(asAny.servicenow_token_url)
+          : servicenow.auth.oauth?.tokenUrl,
+      };
+      if (!servicenow.auth.type) {
+        servicenow.auth.type = "oauth";
+      }
+    }
+    if (asAny.servicenow_api_key || asAny.servicenow_api_key_header) {
+      servicenow.auth.apiKey = {
+        apiKey: asAny.servicenow_api_key
+          ? String(asAny.servicenow_api_key)
+          : servicenow.auth.apiKey?.apiKey,
+        headerName: asAny.servicenow_api_key_header
+          ? String(asAny.servicenow_api_key_header)
+          : servicenow.auth.apiKey?.headerName,
+      };
+      if (!servicenow.auth.type) {
+        servicenow.auth.type = "api_key";
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return servicenow;
 }
 
 export async function loadDbSaicleConfigFromYaml(options: {

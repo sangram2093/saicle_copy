@@ -39,6 +39,7 @@ import {
   handleJiraMutatingTools,
   handleJiraQueryTools,
 } from "./implementations/jiraToolImpl";
+import { handleServiceNowTools } from "./implementations/servicenowToolImpl";
 
 async function callHttpTool(
   url: string,
@@ -226,6 +227,9 @@ export async function callBuiltInTool(
   }
   if (mutatingConfluenceTools.has(fn)) {
     return await handleConfluenceMutatingTools(fn, args, extras);
+  }
+  if (fn.toString().startsWith("servicenow_")) {
+    return await handleServiceNowTools(fn, args, extras);
   }
 
   switch (functionName) {

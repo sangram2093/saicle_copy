@@ -585,14 +585,40 @@ export async function handleServiceNowTools(
       const limit = getOptionalNumberArg(args, "limit", 10) ?? 10;
       const offset = getOptionalNumberArg(args, "offset", 0) ?? 0;
       const filters: string[] = [];
+      const sysparmQuery = getOptionalStringArg(args, "sysparm_query");
       const state = getOptionalStringArg(args, "state");
       const assignedTo = getOptionalStringArg(args, "assigned_to");
+      const assignedToEmail = getOptionalStringArg(args, "assigned_to_email");
+      const assignedToName = getOptionalStringArg(args, "assigned_to_name");
+      const assignmentGroup = getOptionalStringArg(args, "assignment_group");
+      const assignmentGroupName = getOptionalStringArg(
+        args,
+        "assignment_group_name",
+      );
       const category = getOptionalStringArg(args, "category");
       const query = getOptionalStringArg(args, "query");
+      const active =
+        typeof args?.active !== "undefined"
+          ? getBooleanArg(args, "active", true)
+          : undefined;
 
+      if (sysparmQuery) filters.push(sysparmQuery);
       if (state) filters.push(`state=${state}`);
       if (assignedTo) filters.push(`assigned_to=${assignedTo}`);
+      if (assignedToEmail) {
+        filters.push(`assigned_to.email=${assignedToEmail}`);
+      }
+      if (assignedToName) {
+        filters.push(`assigned_to.nameLIKE${assignedToName}`);
+      }
+      if (assignmentGroup) filters.push(`assignment_group=${assignmentGroup}`);
+      if (assignmentGroupName) {
+        filters.push(`assignment_group.nameLIKE${assignmentGroupName}`);
+      }
       if (category) filters.push(`category=${category}`);
+      if (typeof active !== "undefined") {
+        filters.push(`active=${String(active).toLowerCase()}`);
+      }
       if (query) {
         filters.push(
           `short_descriptionLIKE${query}^ORdescriptionLIKE${query}`,

@@ -124,7 +124,8 @@ export const servicenowListIncidentsTool: Tool = {
   hasAlready: "listed ServiceNow incidents",
   function: {
     name: BuiltInToolNames.ServiceNowListIncidents,
-    description: "List incidents from ServiceNow with optional filters.",
+    description:
+      "List incidents from ServiceNow with optional filters (sys_id, names, and raw sysparm_query).",
     parameters: {
       type: "object",
       properties: {
@@ -132,8 +133,14 @@ export const servicenowListIncidentsTool: Tool = {
         offset: { type: "number" },
         state: { type: "string" },
         assigned_to: { type: "string" },
+        assigned_to_email: { type: "string" },
+        assigned_to_name: { type: "string" },
+        assignment_group: { type: "string" },
+        assignment_group_name: { type: "string" },
         category: { type: "string" },
         query: { type: "string" },
+        active: { type: "boolean" },
+        sysparm_query: { type: "string" },
       },
     },
   },

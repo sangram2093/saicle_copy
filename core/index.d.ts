@@ -1806,6 +1806,8 @@ export interface DbSaicleConfig {
   ossVulnerability?: {
     jfrogPlatformUrl?: string;
     jfrogAccessToken?: string;
+    mavenCommand?: string;
+    mavenHome?: string;
   };
 }
 

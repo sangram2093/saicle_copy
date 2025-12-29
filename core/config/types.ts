@@ -1273,6 +1273,8 @@ declare global {
     ossVulnerability?: {
       jfrogPlatformUrl?: string;
       jfrogAccessToken?: string;
+      mavenCommand?: string;
+      mavenHome?: string;
     };
   }
   

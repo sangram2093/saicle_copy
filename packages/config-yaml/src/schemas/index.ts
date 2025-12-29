@@ -160,6 +160,10 @@ export const ossVulnerabilitySchema = z.object({
   jfrogAccessToken: z.string().optional(),
   jfrog_platform_url: z.string().optional(),
   jfrog_access_token: z.string().optional(),
+  mavenCommand: z.string().optional(),
+  mavenHome: z.string().optional(),
+  maven_command: z.string().optional(),
+  maven_home: z.string().optional(),
 });
 
 export const commonMetadataSchema = z.object({

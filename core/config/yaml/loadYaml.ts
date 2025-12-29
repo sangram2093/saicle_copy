@@ -2149,6 +2149,8 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
   const oss: {
     jfrogPlatformUrl?: string;
     jfrogAccessToken?: string;
+    mavenCommand?: string;
+    mavenHome?: string;
   } = {};
 
   try {
@@ -2159,6 +2161,10 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
           jfrogAccessToken?: string;
           jfrog_platform_url?: string;
           jfrog_access_token?: string;
+          mavenCommand?: string;
+          mavenHome?: string;
+          maven_command?: string;
+          maven_home?: string;
         }
       | undefined;
     if (block) {
@@ -2172,6 +2178,15 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
       if (!oss.jfrogAccessToken && block.jfrog_access_token) {
         oss.jfrogAccessToken = String(block.jfrog_access_token);
       }
+      if (block.mavenCommand)
+        oss.mavenCommand = String(block.mavenCommand);
+      if (!oss.mavenCommand && block.maven_command) {
+        oss.mavenCommand = String(block.maven_command);
+      }
+      if (block.mavenHome) oss.mavenHome = String(block.mavenHome);
+      if (!oss.mavenHome && block.maven_home) {
+        oss.mavenHome = String(block.maven_home);
+      }
     }
   } catch (e) {
     // ignore
@@ -2184,6 +2199,10 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
         oss.jfrogPlatformUrl = String(envMap.JFROG_PLATFORM_URL);
       if (!oss.jfrogAccessToken && envMap.JFROG_ACCESS_TOKEN)
         oss.jfrogAccessToken = String(envMap.JFROG_ACCESS_TOKEN);
+      if (!oss.mavenCommand && envMap.MAVEN_COMMAND)
+        oss.mavenCommand = String(envMap.MAVEN_COMMAND);
+      if (!oss.mavenHome && envMap.MAVEN_HOME)
+        oss.mavenHome = String(envMap.MAVEN_HOME);
     }
   } catch (e) {
     // ignore
@@ -2195,6 +2214,14 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
       oss.jfrogPlatformUrl = String(asAny.jfrog_platform_url);
     if (!oss.jfrogAccessToken && asAny.jfrog_access_token)
       oss.jfrogAccessToken = String(asAny.jfrog_access_token);
+    if (!oss.mavenCommand && asAny.maven_command)
+      oss.mavenCommand = String(asAny.maven_command);
+    if (!oss.mavenCommand && asAny.mavenCommand)
+      oss.mavenCommand = String(asAny.mavenCommand);
+    if (!oss.mavenHome && asAny.maven_home)
+      oss.mavenHome = String(asAny.maven_home);
+    if (!oss.mavenHome && asAny.mavenHome)
+      oss.mavenHome = String(asAny.mavenHome);
   } catch (e) {
     // ignore
   }

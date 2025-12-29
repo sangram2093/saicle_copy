@@ -620,12 +620,20 @@ export async function handleServiceNowTools(
 
       if (sysparmQuery) filters.push(sysparmQuery);
       if (state) filters.push(`state=${state}`);
-      if (assignedTo) filters.push(`assigned_to=${assignedTo}`);
       if (assignedToEmail) {
         filters.push(`assigned_to.email=${assignedToEmail}`);
       }
       if (assignedToName) {
         filters.push(`assigned_to.nameLIKE${assignedToName}`);
+      }
+      if (assignedTo) {
+        if (!assignedToEmail && assignedTo.includes("@")) {
+          filters.push(`assigned_to.email=${assignedTo}`);
+        } else if (isSysId(assignedTo)) {
+          filters.push(`assigned_to=${assignedTo}`);
+        } else if (!assignedToEmail && !assignedToName) {
+          filters.push(`assigned_to.nameLIKE${assignedTo}`);
+        }
       }
       if (assignedToCostCenter) {
         filters.push(`assigned_to.cost_center=${assignedToCostCenter}`);

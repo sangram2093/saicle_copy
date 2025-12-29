@@ -14,6 +14,7 @@ type SectionKey = Exclude<
   | "jira"
   | "confluence"
   | "servicenow"
+  | "ossVulnerability"
 >;
 
 interface EditBlockButtonProps<T extends SectionKey> {

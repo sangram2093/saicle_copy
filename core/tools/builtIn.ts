@@ -109,6 +109,11 @@ export enum BuiltInToolNames {
   ServiceNowUpdateScTask = "servicenow_update_sc_task",
   ServiceNowGetScTask = "servicenow_get_sc_task",
   ServiceNowListScTasks = "servicenow_list_sc_tasks",
+  ServiceNowListKbArticles = "servicenow_list_kb_articles",
+  ServiceNowGetKbArticle = "servicenow_get_kb_article",
+  ServiceNowListKbBases = "servicenow_list_kb_bases",
+  ServiceNowListKbCategories = "servicenow_list_kb_categories",
+  ServiceNowListKbTopics = "servicenow_list_kb_topics",
 
   ExtractEntities = "extract_entities",
   PlantumlBuilder = "plantuml_builder",

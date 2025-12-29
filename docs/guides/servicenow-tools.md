@@ -168,6 +168,44 @@ Optional: `query`, `active`, `limit`, `offset`
 Example prompts:
 - "List active catalogs."
 
+## Knowledge Base Tools
+
+### `servicenow_list_kb_articles`
+Optional filters: `kb_number`, `kb_base`, `kb_base_name`, `kb_category`,
+`kb_category_name`, `author`, `author_email`, `author_name`, `workflow_state`,
+`active`, `query`, `sysparm_query`, plus `limit`/`offset`.
+
+Example prompts:
+- "List KB articles with number KB0012345."
+- "List active KB articles in base name 'RTB' with workflow state published."
+- "Search KB articles where the description mentions latency."
+
+### `servicenow_get_kb_article`
+Required: `kb_id` (number or sys_id)
+Optional: `include_content`, `fields`, `display_value`, `exclude_reference_link`
+
+Example prompts:
+- "Get KB article KB0012345 with full content."
+- "Get KB article KB0012345 without content."
+
+### `servicenow_list_kb_bases`
+Optional: `query`, `active`, `limit`, `offset`
+
+Example prompts:
+- "List active knowledge bases."
+
+### `servicenow_list_kb_categories`
+Optional: `query`, `active`, `limit`, `offset`
+
+Example prompts:
+- "List knowledge base categories containing 'RTB'."
+
+### `servicenow_list_kb_topics`
+Optional: `query`, `active`, `limit`, `offset`
+
+Example prompts:
+- "List knowledge base topics."
+
 ## Change Management Tools
 
 ### `servicenow_create_change_request`

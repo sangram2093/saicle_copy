@@ -425,6 +425,13 @@ function formatDateTime(date: Date) {
   )} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
+function normalizeDisplayValue(field: any) {
+  if (field && typeof field === "object" && "display_value" in field) {
+    return field.display_value;
+  }
+  return field;
+}
+
 async function getCatalogItemVariables(
   extras: ToolExtras,
   config: ServiceNowConfig,
@@ -719,6 +726,192 @@ export async function handleServiceNowTools(
       return toContextItem(extras, "Incident details", {
         success: true,
         incident,
+      });
+    }
+
+    case BuiltInToolNames.ServiceNowListKbArticles: {
+      const { queryParams, limit, offset } = getListQueryParams(args);
+      const filters: string[] = [];
+      const sysparmQuery = getOptionalStringArg(args, "sysparm_query");
+      const kbNumber = getOptionalStringArg(args, "kb_number");
+      const kbBase = getOptionalStringArg(args, "kb_base");
+      const kbBaseName = getOptionalStringArg(args, "kb_base_name");
+      const kbCategory = getOptionalStringArg(args, "kb_category");
+      const kbCategoryName = getOptionalStringArg(args, "kb_category_name");
+      const author = getOptionalStringArg(args, "author");
+      const authorEmail = getOptionalStringArg(args, "author_email");
+      const authorName = getOptionalStringArg(args, "author_name");
+      const workflowState = getOptionalStringArg(args, "workflow_state");
+      const active =
+        typeof args?.active !== "undefined"
+          ? getBooleanArg(args, "active", true)
+          : undefined;
+      const query = getOptionalStringArg(args, "query");
+
+      if (sysparmQuery) filters.push(sysparmQuery);
+      if (kbNumber) filters.push(`number=${kbNumber}`);
+      if (kbBase) filters.push(`kb_knowledge_base=${kbBase}`);
+      if (kbBaseName) {
+        filters.push(`kb_knowledge_base.titleLIKE${kbBaseName}`);
+      }
+      if (kbCategory) filters.push(`kb_category=${kbCategory}`);
+      if (kbCategoryName) {
+        filters.push(`kb_category.labelLIKE${kbCategoryName}`);
+      }
+      if (author) filters.push(`author=${author}`);
+      if (authorEmail) filters.push(`author.email=${authorEmail}`);
+      if (authorName) filters.push(`author.nameLIKE${authorName}`);
+      if (workflowState) filters.push(`workflow_state=${workflowState}`);
+      if (typeof active !== "undefined") {
+        filters.push(`active=${String(active).toLowerCase()}`);
+      }
+      if (query) {
+        filters.push(`short_descriptionLIKE${query}^ORtextLIKE${query}`);
+      }
+
+      if (filters.length) {
+        queryParams.sysparm_query = filters.join("^");
+      }
+
+      const data = await serviceNowRequest(extras, config, {
+        method: "GET",
+        path: "/table/kb_knowledge",
+        query: queryParams,
+      });
+
+      const articles = (data?.result || []).map((article: any) => ({
+        sys_id: article.sys_id,
+        number: article.number,
+        short_description: article.short_description,
+        workflow_state: article.workflow_state,
+        kb_knowledge_base: normalizeDisplayValue(article.kb_knowledge_base),
+        kb_category: normalizeDisplayValue(article.kb_category),
+        author: normalizeDisplayValue(article.author),
+        published: article.published,
+        updated_on: article.sys_updated_on,
+      }));
+
+      return toContextItem(extras, "KB articles list", {
+        success: true,
+        message: `Retrieved ${articles.length} knowledge base articles`,
+        articles,
+        total: articles.length,
+        limit,
+        offset,
+      });
+    }
+
+    case BuiltInToolNames.ServiceNowGetKbArticle: {
+      const kbId = getStringArg(args, "kb_id");
+      const includeContent =
+        typeof args?.include_content !== "undefined"
+          ? getBooleanArg(args, "include_content", true)
+          : true;
+      const sysId = await resolveRecordSysId(
+        extras,
+        config,
+        "kb_knowledge",
+        kbId,
+        "number",
+      );
+      const query = getRecordQueryParams(args);
+      if (!includeContent && !args?.fields) {
+        query.sysparm_fields =
+          "sys_id,number,short_description,workflow_state,kb_knowledge_base,kb_category,author,sys_created_on,sys_updated_on";
+      }
+      const data = await serviceNowRequest(extras, config, {
+        method: "GET",
+        path: `/table/kb_knowledge/${sysId}`,
+        query,
+      });
+      const article = data?.result;
+      if (!article) {
+        return toContextItem(extras, "KB article not found", {
+          success: false,
+          message: `KB article not found: ${kbId}`,
+        });
+      }
+      return toContextItem(extras, "KB article details", {
+        success: true,
+        article,
+      });
+    }
+
+    case BuiltInToolNames.ServiceNowListKbBases: {
+      const { queryParams, limit, offset } = getListQueryParams(args);
+      const active =
+        typeof args?.active !== "undefined"
+          ? getBooleanArg(args, "active", true)
+          : undefined;
+      if (typeof active !== "undefined") {
+        queryParams.sysparm_query = queryParams.sysparm_query
+          ? `${queryParams.sysparm_query}^active=${String(active).toLowerCase()}`
+          : `active=${String(active).toLowerCase()}`;
+      }
+      const data = await serviceNowRequest(extras, config, {
+        method: "GET",
+        path: "/table/kb_knowledge_base",
+        query: queryParams,
+      });
+      const bases = data?.result || [];
+      return toContextItem(extras, "KB bases list", {
+        success: true,
+        bases,
+        total: bases.length,
+        limit,
+        offset,
+      });
+    }
+
+    case BuiltInToolNames.ServiceNowListKbCategories: {
+      const { queryParams, limit, offset } = getListQueryParams(args);
+      const active =
+        typeof args?.active !== "undefined"
+          ? getBooleanArg(args, "active", true)
+          : undefined;
+      if (typeof active !== "undefined") {
+        queryParams.sysparm_query = queryParams.sysparm_query
+          ? `${queryParams.sysparm_query}^active=${String(active).toLowerCase()}`
+          : `active=${String(active).toLowerCase()}`;
+      }
+      const data = await serviceNowRequest(extras, config, {
+        method: "GET",
+        path: "/table/kb_category",
+        query: queryParams,
+      });
+      const categories = data?.result || [];
+      return toContextItem(extras, "KB categories list", {
+        success: true,
+        categories,
+        total: categories.length,
+        limit,
+        offset,
+      });
+    }
+
+    case BuiltInToolNames.ServiceNowListKbTopics: {
+      const { queryParams, limit, offset } = getListQueryParams(args);
+      const active =
+        typeof args?.active !== "undefined"
+          ? getBooleanArg(args, "active", true)
+          : undefined;
+      if (typeof active !== "undefined") {
+        queryParams.sysparm_query = queryParams.sysparm_query
+          ? `${queryParams.sysparm_query}^active=${String(active).toLowerCase()}`
+          : `active=${String(active).toLowerCase()}`;
+      }
+      const data = await serviceNowRequest(extras, config, {
+        method: "GET",
+        path: "/table/kb_knowledge_topic",
+        query: queryParams,
+      });
+      const topics = data?.result || [];
+      return toContextItem(extras, "KB topics list", {
+        success: true,
+        topics,
+        total: topics.length,
+        limit,
+        offset,
       });
     }
 

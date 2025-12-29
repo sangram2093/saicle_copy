@@ -173,6 +173,135 @@ export const servicenowGetIncidentTool: Tool = {
   },
 };
 
+export const servicenowListKbArticlesTool: Tool = {
+  ...(serviceNowReadOnlyBase as any),
+  displayTitle: "ServiceNow: List KB Articles",
+  wouldLikeTo: "list ServiceNow knowledge base articles",
+  isCurrently: "listing ServiceNow knowledge base articles",
+  hasAlready: "listed ServiceNow knowledge base articles",
+  function: {
+    name: BuiltInToolNames.ServiceNowListKbArticles,
+    description: "List knowledge base articles from ServiceNow.",
+    parameters: {
+      type: "object",
+      properties: {
+        limit: { type: "number" },
+        offset: { type: "number" },
+        kb_number: { type: "string" },
+        kb_base: { type: "string" },
+        kb_base_name: { type: "string" },
+        kb_category: { type: "string" },
+        kb_category_name: { type: "string" },
+        author: { type: "string" },
+        author_email: { type: "string" },
+        author_name: { type: "string" },
+        workflow_state: { type: "string" },
+        active: { type: "boolean" },
+        query: { type: "string" },
+        sysparm_query: { type: "string" },
+        display_value: { type: "boolean" },
+        exclude_reference_link: { type: "boolean" },
+        fields: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+};
+
+export const servicenowGetKbArticleTool: Tool = {
+  ...(serviceNowReadOnlyBase as any),
+  displayTitle: "ServiceNow: Get KB Article",
+  wouldLikeTo: "get knowledge base article {{{ kb_id }}}",
+  isCurrently: "fetching a ServiceNow knowledge base article",
+  hasAlready: "fetched a ServiceNow knowledge base article",
+  function: {
+    name: BuiltInToolNames.ServiceNowGetKbArticle,
+    description: "Get a knowledge base article by number or sys_id.",
+    parameters: {
+      type: "object",
+      required: ["kb_id"],
+      properties: {
+        kb_id: { type: "string" },
+        include_content: { type: "boolean" },
+        display_value: { type: "boolean" },
+        exclude_reference_link: { type: "boolean" },
+        fields: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+};
+
+export const servicenowListKbBasesTool: Tool = {
+  ...(serviceNowReadOnlyBase as any),
+  displayTitle: "ServiceNow: List KB Bases",
+  wouldLikeTo: "list ServiceNow knowledge bases",
+  isCurrently: "listing ServiceNow knowledge bases",
+  hasAlready: "listed ServiceNow knowledge bases",
+  function: {
+    name: BuiltInToolNames.ServiceNowListKbBases,
+    description: "List knowledge bases from ServiceNow.",
+    parameters: {
+      type: "object",
+      properties: {
+        limit: { type: "number" },
+        offset: { type: "number" },
+        query: { type: "string" },
+        active: { type: "boolean" },
+        display_value: { type: "boolean" },
+        exclude_reference_link: { type: "boolean" },
+        fields: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+};
+
+export const servicenowListKbCategoriesTool: Tool = {
+  ...(serviceNowReadOnlyBase as any),
+  displayTitle: "ServiceNow: List KB Categories",
+  wouldLikeTo: "list ServiceNow knowledge base categories",
+  isCurrently: "listing ServiceNow knowledge base categories",
+  hasAlready: "listed ServiceNow knowledge base categories",
+  function: {
+    name: BuiltInToolNames.ServiceNowListKbCategories,
+    description: "List knowledge base categories from ServiceNow.",
+    parameters: {
+      type: "object",
+      properties: {
+        limit: { type: "number" },
+        offset: { type: "number" },
+        query: { type: "string" },
+        active: { type: "boolean" },
+        display_value: { type: "boolean" },
+        exclude_reference_link: { type: "boolean" },
+        fields: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+};
+
+export const servicenowListKbTopicsTool: Tool = {
+  ...(serviceNowReadOnlyBase as any),
+  displayTitle: "ServiceNow: List KB Topics",
+  wouldLikeTo: "list ServiceNow knowledge base topics",
+  isCurrently: "listing ServiceNow knowledge base topics",
+  hasAlready: "listed ServiceNow knowledge base topics",
+  function: {
+    name: BuiltInToolNames.ServiceNowListKbTopics,
+    description: "List knowledge base topics from ServiceNow.",
+    parameters: {
+      type: "object",
+      properties: {
+        limit: { type: "number" },
+        offset: { type: "number" },
+        query: { type: "string" },
+        active: { type: "boolean" },
+        display_value: { type: "boolean" },
+        exclude_reference_link: { type: "boolean" },
+        fields: { type: "array", items: { type: "string" } },
+      },
+    },
+  },
+};
+
 export const servicenowListCatalogItemsTool: Tool = {
   ...(serviceNowReadOnlyBase as any),
   displayTitle: "ServiceNow: List Catalog Items",

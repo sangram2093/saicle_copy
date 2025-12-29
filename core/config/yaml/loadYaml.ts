@@ -1892,6 +1892,24 @@ function extractServiceNowConfigInFlow(
   } catch (e) {
     // ignore extraction errors
   }
+
+  try {
+    const ossCfg = extractOptionalOssVulnerabilityConfig(
+      config as AssistantUnrolled,
+    );
+    if (ossCfg && (ossCfg.jfrogPlatformUrl || ossCfg.jfrogAccessToken)) {
+      dbsaicleConfig.ossVulnerability = ossCfg;
+      if (!ossCfg.jfrogAccessToken) {
+        localErrors.push({
+          fatal: false,
+          message:
+            "Partial OSS vulnerability scan configuration found in config.yaml; provide `ossVulnerability.jfrogAccessToken` (or set JFROG_ACCESS_TOKEN) for full functionality.",
+        });
+      }
+    }
+  } catch (e) {
+    // ignore extraction errors
+  }
 }
 
 function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
@@ -2125,6 +2143,63 @@ function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
   }
 
   return servicenow;
+}
+
+function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
+  const oss: {
+    jfrogPlatformUrl?: string;
+    jfrogAccessToken?: string;
+  } = {};
+
+  try {
+    const asAny = config as any;
+    const block = asAny.ossVulnerability as
+      | {
+          jfrogPlatformUrl?: string;
+          jfrogAccessToken?: string;
+          jfrog_platform_url?: string;
+          jfrog_access_token?: string;
+        }
+      | undefined;
+    if (block) {
+      if (block.jfrogPlatformUrl)
+        oss.jfrogPlatformUrl = String(block.jfrogPlatformUrl);
+      if (!oss.jfrogPlatformUrl && block.jfrog_platform_url) {
+        oss.jfrogPlatformUrl = String(block.jfrog_platform_url);
+      }
+      if (block.jfrogAccessToken)
+        oss.jfrogAccessToken = String(block.jfrogAccessToken);
+      if (!oss.jfrogAccessToken && block.jfrog_access_token) {
+        oss.jfrogAccessToken = String(block.jfrog_access_token);
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const envMap = (config as any).env as Record<string, any> | undefined;
+    if (envMap) {
+      if (!oss.jfrogPlatformUrl && envMap.JFROG_PLATFORM_URL)
+        oss.jfrogPlatformUrl = String(envMap.JFROG_PLATFORM_URL);
+      if (!oss.jfrogAccessToken && envMap.JFROG_ACCESS_TOKEN)
+        oss.jfrogAccessToken = String(envMap.JFROG_ACCESS_TOKEN);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const asAny = config as any;
+    if (!oss.jfrogPlatformUrl && asAny.jfrog_platform_url)
+      oss.jfrogPlatformUrl = String(asAny.jfrog_platform_url);
+    if (!oss.jfrogAccessToken && asAny.jfrog_access_token)
+      oss.jfrogAccessToken = String(asAny.jfrog_access_token);
+  } catch (e) {
+    // ignore
+  }
+
+  return oss;
 }
 
 export async function loadDbSaicleConfigFromYaml(options: {

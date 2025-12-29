@@ -44,6 +44,7 @@ SERVICENOW_API_KEY_HEADER
 - Some tools accept a **number** or a **sys_id**. If unsure, fetch the record first.
 - For list tools, `query` generally accepts ServiceNow `sysparm_query` syntax.
 - For incident listing, you can also use specialized filters like assignee email, cost center, and location.
+- For `servicenow_list_incidents`, if you pass an email in `assigned_to`, it is treated as `assigned_to.email`.
 
 ## Incident Management Tools
 
@@ -89,6 +90,7 @@ Example prompts:
 - "Show incidents assigned to group name 'Network Ops' with state 2."
 - "List incidents for cost center name 'Trading' and location name 'NYC'."
 - "List incidents where short description mentions VPN."
+- "List incidents assigned_to john.doe@company.com."
 
 ### `servicenow_get_incident`
 Required: `incident_id` (number or sys_id)

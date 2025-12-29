@@ -27,6 +27,7 @@ import { parseExcelImpl } from "./implementations/parseExcel";
 import { parseDocxImpl } from "./implementations/parseDocx";
 import { extractEntitiesImpl } from "./implementations/extractEntities";
 import { plantumlBuilderImpl } from "./implementations/plantumlBuilder";
+import { ossVulnerabilityScanImpl } from "./implementations/ossVulnerabilityScan";
 import { safeParseToolCallArgs } from "./parseArgs";
 
 import {
@@ -279,6 +280,8 @@ export async function callBuiltInTool(
       return await extractEntitiesImpl(args, extras);
     case BuiltInToolNames.PlantumlBuilder:
       return await plantumlBuilderImpl(args, extras);
+    case BuiltInToolNames.OssVulnerabilityScan:
+      return await ossVulnerabilityScanImpl(args, extras);
     default:
       throw new Error(`Tool "${functionName}" not found`);
   }

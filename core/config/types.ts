@@ -1269,6 +1269,11 @@ declare global {
         };
       };
     };
+    // Optional OSS vulnerability scan configuration from config.yaml
+    ossVulnerability?: {
+      jfrogPlatformUrl?: string;
+      jfrogAccessToken?: string;
+    };
   }
   
   export interface BrowserSerializedDbSaicleConfig {

@@ -117,6 +117,7 @@ export enum BuiltInToolNames {
   ParsePdf = "parse_pdf",
   ParseExcel = "parse_excel",
   ParseDocx = "parse_docx",
+  OssVulnerabilityScan = "oss_vulnerability_scan",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

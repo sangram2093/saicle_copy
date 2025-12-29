@@ -155,6 +155,13 @@ export const serviceNowSchema = z
     path: ["instanceUrl"],
   });
 
+export const ossVulnerabilitySchema = z.object({
+  jfrogPlatformUrl: z.string().optional(),
+  jfrogAccessToken: z.string().optional(),
+  jfrog_platform_url: z.string().optional(),
+  jfrog_access_token: z.string().optional(),
+});
+
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
   sourceCodeUrl: z.string().optional(),
@@ -178,6 +185,7 @@ export const baseConfigYamlSchema = z.object({
   jira: jiraSchema.optional(),
   confluence: confluenceSchema.optional(),
   servicenow: serviceNowSchema.optional(),
+  ossVulnerability: ossVulnerabilitySchema.optional(),
 });
 
 const modelsUsesSchema = z

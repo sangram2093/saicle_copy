@@ -321,7 +321,7 @@ describe("interceptSystemToolCalls", () => {
     expect(
       (result?.value as AssistantChatMessage[])[0].toolCalls?.[0].function
         ?.arguments,
-    ).toBe("123");
+    ).toBe('"123"');
 
     // Skip to boolean arg end
     await generator.next();
@@ -330,6 +330,6 @@ describe("interceptSystemToolCalls", () => {
     expect(
       (result?.value as AssistantChatMessage[])[0].toolCalls?.[0].function
         ?.arguments,
-    ).toBe("true");
+    ).toBe('"true"');
   });
 });

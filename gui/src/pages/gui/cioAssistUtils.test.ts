@@ -72,6 +72,9 @@ describe("cioAssistUtils", () => {
       expect(isValidDate("2025-09-01T00:00:00+05:30")).toBe(true);
       expect(isValidDate("2025-01-15")).toBe(true);
       expect(isValidDate("2025/01/15")).toBe(true);
+      expect(isValidDate("Jan-2025")).toBe(true);
+      expect(isValidDate("Dec-2024")).toBe(true);
+      expect(isValidDate("Sep-2025")).toBe(true);
     });
 
     it("should return false for non-string values", () => {
@@ -103,6 +106,9 @@ describe("cioAssistUtils", () => {
       expect(isISODateFormat("01/15/2025")).toBe(false);
       expect(isISODateFormat("2025-Q1")).toBe(false);
       expect(isISODateFormat("January 15, 2025")).toBe(false);
+      expect(isISODateFormat("Jan-2025")).toBe(false);
+      expect(isISODateFormat("Dec-2024")).toBe(false);
+      expect(isISODateFormat("Sep-2025")).toBe(false);
     });
 
     it("should return false for non-string values", () => {
@@ -141,6 +147,20 @@ describe("cioAssistUtils", () => {
       expect(fieldTypes["end time"]).toBe("date_field");
       expect(fieldTypes["report period"]).toBe("date_field");
       expect(fieldTypes["value"]).toBe("cost_or_bill_values");
+    });
+
+    it("should classify MMM-YYYY format as date_field", () => {
+      const records = [
+        {
+          period: "Jan-2025",
+          "reporting date": "Dec-2024",
+          cost: 50000,
+        },
+      ];
+      const fieldTypes = classifyFields(records);
+      expect(fieldTypes["period"]).toBe("date_field");
+      expect(fieldTypes["reporting date"]).toBe("date_field");
+      expect(fieldTypes["cost"]).toBe("cost_or_bill_values");
     });
   });
 

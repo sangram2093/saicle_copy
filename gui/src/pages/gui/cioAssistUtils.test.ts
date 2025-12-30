@@ -283,10 +283,14 @@ describe("cioAssistUtils", () => {
         dimensionFields,
       );
 
+      // With new implementation: each distinct dimension group gets its own dataset with its own color
+      // sampleRecords has 2 records with different "business unit" values
       expect(chartData.labels).toHaveLength(2);
-      expect(chartData.datasets).toHaveLength(1);
-      expect(chartData.datasets[0].data).toEqual([29999.02, 19999.02]);
-      expect(chartData.datasets[0].label).toBe("allocated cost");
+      expect(chartData.datasets).toHaveLength(2); // One dataset per dimension group
+      expect(chartData.datasets[0].label).toBe("Investment bank"); // First dimension group
+      expect(chartData.datasets[1].label).toBe("corporate bank"); // Second dimension group
+      expect(chartData.datasets[0].data).toEqual([29999.02]);
+      expect(chartData.datasets[1].data).toEqual([19999.02]);
     });
 
     it("should create correct number of datasets for multiple cost fields", () => {
@@ -304,9 +308,14 @@ describe("cioAssistUtils", () => {
         dimensionFields,
       );
 
+      // With new implementation: each distinct dimension group gets its own dataset
+      // records has 2 categories: A and B
       expect(chartData.datasets).toHaveLength(2);
-      expect(chartData.datasets[0].label).toBe("cost1");
-      expect(chartData.datasets[1].label).toBe("cost2");
+      expect(chartData.datasets[0].label).toBe("A");
+      expect(chartData.datasets[1].label).toBe("B");
+      // Each dataset shows the first cost field (cost1) for that dimension
+      expect(chartData.datasets[0].data).toEqual([100]);
+      expect(chartData.datasets[1].data).toEqual([150]);
     });
   });
 
@@ -330,10 +339,14 @@ describe("cioAssistUtils", () => {
         dimensionFields,
       );
 
+      // With pivot table: dates as labels, dimension groups as datasets
+      // manyDatesRecords has 1 dimension group combining all dimension fields
       expect(chartData.labels).toHaveLength(3);
-      expect(chartData.datasets).toHaveLength(1);
+      expect(chartData.datasets).toHaveLength(1); // One dataset per dimension group
+      expect(chartData.datasets[0].label).toBe(
+        "Investment bank - denis.roux@db.com",
+      ); // Dimension group
       expect(chartData.datasets[0].data).toEqual([29999.02, 25000.5, 30000]);
-      expect(chartData.datasets[0].label).toBe("allocated cost");
     });
 
     it("should sort records by date ascending", () => {
@@ -362,20 +375,34 @@ describe("cioAssistUtils", () => {
       );
 
       // Data should be sorted by date (ascending)
+      // With no dimension fields, all records are grouped as "Total"
+      expect(chartData.datasets).toHaveLength(1);
+      expect(chartData.datasets[0].label).toBe("Total");
       expect(chartData.datasets[0].data).toEqual([300, 200, 100]);
     });
 
-    it("should handle multiple cost fields", () => {
+    it("should handle multiple dimension groups", () => {
+      // Create records with multiple dimension groups
       const records = [
         {
           date: "2025-09-01T00:00:00+05:30",
-          cost1: 100,
-          cost2: 200,
+          category: "A",
+          value: 100,
         },
         {
           date: "2025-10-01T00:00:00+05:30",
-          cost1: 150,
-          cost2: 250,
+          category: "A",
+          value: 150,
+        },
+        {
+          date: "2025-09-01T00:00:00+05:30",
+          category: "B",
+          value: 200,
+        },
+        {
+          date: "2025-10-01T00:00:00+05:30",
+          category: "B",
+          value: 250,
         },
       ];
 
@@ -383,7 +410,9 @@ describe("cioAssistUtils", () => {
       const dateFields = Object.keys(fieldTypes).filter(
         (f) => fieldTypes[f] === "date_field",
       );
-      const costFields = ["cost1", "cost2"];
+      const costFields = Object.keys(fieldTypes).filter(
+        (f) => fieldTypes[f] === "cost_or_bill_values",
+      );
       const dimensionFields = Object.keys(fieldTypes).filter(
         (f) => fieldTypes[f] === "dimension",
       );
@@ -395,9 +424,13 @@ describe("cioAssistUtils", () => {
         dimensionFields,
       );
 
+      // Should have 2 datasets (one per dimension group: A and B)
       expect(chartData.datasets).toHaveLength(2);
+      expect(chartData.datasets[0].label).toBe("A");
       expect(chartData.datasets[0].data).toEqual([100, 150]);
+      expect(chartData.datasets[1].label).toBe("B");
       expect(chartData.datasets[1].data).toEqual([200, 250]);
+      expect(chartData.labels).toHaveLength(2);
     });
   });
 });

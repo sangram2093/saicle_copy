@@ -365,12 +365,14 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
             </h3>
 
             {/* Chart Type Toggle */}
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              {/* Bar Chart SVG Toggle */}
               <button
                 onClick={() => setChartTypeOverride("bar")}
+                title="Switch to Bar Chart"
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
+                  padding: "6px",
+                  borderRadius: "4px",
                   border:
                     chartTypeOverride === "bar" ||
                     (chartTypeOverride === null && chartType === "bar")
@@ -381,42 +383,96 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                     (chartTypeOverride === null && chartType === "bar")
                       ? "#eff6ff"
                       : "#fff",
-                  color:
-                    chartTypeOverride === "bar" ||
-                    (chartTypeOverride === null && chartType === "bar")
-                      ? "#1e40af"
-                      : "#6b7280",
-                  fontWeight:
-                    chartTypeOverride === "bar" ||
-                    (chartTypeOverride === null && chartType === "bar")
-                      ? "600"
-                      : "500",
                   cursor: "pointer",
-                  fontSize: "14px",
                   transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "32px",
+                  height: "32px",
                 }}
               >
-                📊 Bar Chart
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{
+                    color:
+                      chartTypeOverride === "bar" ||
+                      (chartTypeOverride === null && chartType === "bar")
+                        ? "#1e40af"
+                        : "#6b7280",
+                  }}
+                >
+                  {/* Bar Chart Icon - 3 vertical bars */}
+                  <rect x="3" y="12" width="3" height="8" fill="currentColor" />
+                  <rect
+                    x="10"
+                    y="6"
+                    width="3"
+                    height="14"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="17"
+                    y="9"
+                    width="3"
+                    height="11"
+                    fill="currentColor"
+                  />
+                </svg>
               </button>
+
+              {/* Line Chart SVG Toggle */}
               <button
                 onClick={() => setChartTypeOverride("line")}
+                title="Switch to Line Chart"
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
+                  padding: "6px",
+                  borderRadius: "4px",
                   border:
                     chartTypeOverride === "line"
                       ? "2px solid #3b82f6"
                       : "1px solid #d1d5db",
                   backgroundColor:
                     chartTypeOverride === "line" ? "#eff6ff" : "#fff",
-                  color: chartTypeOverride === "line" ? "#1e40af" : "#6b7280",
-                  fontWeight: chartTypeOverride === "line" ? "600" : "500",
                   cursor: "pointer",
-                  fontSize: "14px",
                   transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "32px",
+                  height: "32px",
                 }}
               >
-                📈 Line Chart
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{
+                    color: chartTypeOverride === "line" ? "#1e40af" : "#6b7280",
+                  }}
+                >
+                  {/* Line Chart Icon - connected points */}
+                  <polyline
+                    points="3,18 8,12 13,14 20,5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="3" cy="18" r="2" fill="currentColor" />
+                  <circle cx="8" cy="12" r="2" fill="currentColor" />
+                  <circle cx="13" cy="14" r="2" fill="currentColor" />
+                  <circle cx="20" cy="5" r="2" fill="currentColor" />
+                </svg>
               </button>
             </div>
           </div>

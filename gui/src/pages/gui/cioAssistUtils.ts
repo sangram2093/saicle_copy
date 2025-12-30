@@ -191,8 +191,9 @@ const optimizeDimensionLabels = (
 };
 
 /**
- * Prepare data for line chart
- * Groups by non-cost fields and sorts by date
+ * Prepare data for line chart as a pivot table
+ * First column is date field, other columns are dimension groups with their cost values
+ * Organizes data: dates as labels, each dimension group gets its own dataset (column)
  */
 export const prepareLineChartData = (
   records: Record<string, unknown>[],
@@ -211,33 +212,78 @@ export const prepareLineChartData = (
     return dateA - dateB;
   });
 
-  // Extract unique dates and sort
-  const dateLabels = Array.from(
+  // Extract unique dates sorted and format as labels
+  const uniqueDateStrings = Array.from(
     new Set(
-      sortedRecords.map((r) =>
-        isValidDate(r[dateField])
-          ? new Date(r[dateField] as string).toLocaleDateString()
-          : "",
-      ),
+      sortedRecords
+        .map((r) => {
+          const dateVal = r[dateField];
+          return isValidDate(dateVal)
+            ? new Date(dateVal as string).toISOString().split("T")[0]
+            : null;
+        })
+        .filter((v) => v !== null),
     ),
-  ).filter((d) => d !== "");
+  ).sort();
 
-  // Create dataset for each cost field
-  const datasets: ChartDataset[] = costFields.map((costField, idx) => {
-    const data = sortedRecords.map((record) => {
-      const value = record[costField];
-      return typeof value === "number" ? parseFloat(value.toFixed(2)) : 0;
-    });
+  const dateLabels = uniqueDateStrings.map((dateStr) =>
+    new Date(dateStr as string).toLocaleDateString(),
+  );
 
-    return {
-      label: costField,
-      data: data,
-      borderColor: generateColor(idx),
-      backgroundColor: `rgba(${generateRGB(idx)}, 0.1)`,
-      tension: 0.1,
-      fill: false,
-    };
+  // Get unique dimension group combinations
+  const dimensionGroupsSet = new Set<string>();
+  const pivotData = new Map<string, Map<string, number>>();
+
+  sortedRecords.forEach((record) => {
+    // Create dimension group key
+    const dimensionGroupKey =
+      dimensionFields.length > 0
+        ? dimensionFields.map((f) => record[f]).join(" - ")
+        : "Total";
+
+    dimensionGroupsSet.add(dimensionGroupKey);
+
+    // Get date key
+    const dateVal = record[dateField];
+    const dateKey = isValidDate(dateVal)
+      ? new Date(dateVal as string).toISOString().split("T")[0]
+      : null;
+
+    if (!dateKey) return;
+
+    // Initialize pivot structure if needed
+    if (!pivotData.has(dimensionGroupKey)) {
+      pivotData.set(dimensionGroupKey, new Map());
+    }
+
+    // Add cost value to the pivot table cell
+    const costValue = record[costFields[0]];
+    const value =
+      typeof costValue === "number" ? parseFloat(costValue.toFixed(2)) : 0;
+
+    const currentValue = pivotData.get(dimensionGroupKey)?.get(dateKey) || 0;
+    pivotData.get(dimensionGroupKey)?.set(dateKey, currentValue + value);
   });
+
+  // Create dataset for each dimension group with data for each date
+  const dimensionGroups = Array.from(dimensionGroupsSet).sort();
+  const datasets: ChartDataset[] = dimensionGroups.map(
+    (dimensionGroup, idx) => {
+      const dateValueMap = pivotData.get(dimensionGroup) || new Map();
+      const data = uniqueDateStrings.map(
+        (dateStr) => dateValueMap.get(dateStr as string) || 0,
+      );
+
+      return {
+        label: dimensionGroup,
+        data: data,
+        borderColor: generateColor(idx),
+        backgroundColor: `rgba(${generateRGB(idx)}, 0.1)`,
+        tension: 0.1,
+        fill: false,
+      };
+    },
+  );
 
   return {
     labels: dateLabels,
@@ -320,23 +366,42 @@ export const prepareBarChartData = (
   // Original logic for bar chart without date field
   const varyingDimensions = optimizeDimensionLabels(records, dimensionFields);
 
-  const labels = records.map((r) => {
-    if (Object.keys(varyingDimensions).length === 0) {
-      return `Record ${records.indexOf(r) + 1}`;
+  // Group records by dimension to assign same color to same dimension group
+  const groupedByDimension = new Map<string, Record<string, unknown>[]>();
+
+  records.forEach((r) => {
+    const groupKey =
+      Object.keys(varyingDimensions).length === 0
+        ? "Total"
+        : Object.keys(varyingDimensions)
+            .map((f) => r[f])
+            .join(" - ");
+
+    if (!groupedByDimension.has(groupKey)) {
+      groupedByDimension.set(groupKey, []);
     }
-    return Object.keys(varyingDimensions)
-      .map((f) => r[f])
-      .join(" - ");
+    groupedByDimension.get(groupKey)!.push(r);
   });
 
-  const datasets: ChartDataset[] = costFields.map((costField, idx) => ({
-    label: costField,
-    data: records.map((r) => {
-      const value = r[costField];
-      return typeof value === "number" ? parseFloat(value.toFixed(2)) : 0;
+  // Create a dataset for each dimension group (each gets its own color)
+  const datasets: ChartDataset[] = Array.from(groupedByDimension.entries()).map(
+    ([groupKey, groupRecords], idx) => ({
+      label: groupKey,
+      data: groupRecords.map((r) => {
+        const value = r[costFields[0]];
+        return typeof value === "number" ? parseFloat(value.toFixed(2)) : 0;
+      }),
+      backgroundColor: generateColor(idx),
     }),
-    backgroundColor: generateColor(idx),
-  }));
+  );
+
+  const labels = records.map((r, index) => {
+    // Create a label for each record (for the x-axis)
+    if (costFields.length > 0) {
+      return `${costFields[0]} - ${index + 1}`;
+    }
+    return `Record ${index + 1}`;
+  });
 
   return {
     labels: labels,

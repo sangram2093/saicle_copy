@@ -43,6 +43,21 @@ const varyingDateRecords = [
     cio: "denis.roux@db.com",
     "reporting period end date": "2025-10-01T00:00:00+05:30",
   },
+];
+
+const manyDatesRecords = [
+  {
+    "allocated cost": 29999.02,
+    "business unit": "Investment bank",
+    cio: "denis.roux@db.com",
+    "reporting period end date": "2025-09-01T00:00:00+05:30",
+  },
+  {
+    "allocated cost": 25000.5,
+    "business unit": "Investment bank",
+    cio: "denis.roux@db.com",
+    "reporting period end date": "2025-10-01T00:00:00+05:30",
+  },
   {
     "allocated cost": 30000.0,
     "business unit": "Investment bank",
@@ -136,13 +151,13 @@ describe("cioAssistUtils", () => {
       expect(chartType).toBe("bar");
     });
 
-    it("should return bar chart when dates are varying (up to 3 unique dates)", () => {
+    it("should return bar chart when dates are varying (up to 2 unique dates)", () => {
       const fieldTypes = classifyFields(varyingDateRecords);
       const chartType = determineChartType(varyingDateRecords, fieldTypes);
       expect(chartType).toBe("bar");
     });
 
-    it("should return line chart when dates are varying (more than 3 unique dates)", () => {
+    it("should return line chart when dates are varying (more than 2 unique dates)", () => {
       const manyDatesRecords = [
         {
           "allocated cost": 29999.02,
@@ -297,7 +312,7 @@ describe("cioAssistUtils", () => {
 
   describe("prepareLineChartData", () => {
     it("should prepare line chart data correctly", () => {
-      const fieldTypes = classifyFields(varyingDateRecords);
+      const fieldTypes = classifyFields(manyDatesRecords);
       const dateFields = Object.keys(fieldTypes).filter(
         (f) => fieldTypes[f] === "date_field",
       );
@@ -309,7 +324,7 @@ describe("cioAssistUtils", () => {
       );
 
       const chartData = prepareLineChartData(
-        varyingDateRecords,
+        manyDatesRecords,
         dateFields[0],
         costFields,
         dimensionFields,

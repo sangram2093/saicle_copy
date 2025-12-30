@@ -14,7 +14,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Bar, Line } from "react-chartjs-2";
 import {
   classifyFields,
@@ -60,6 +60,18 @@ interface RenderState {
     hasChart: boolean;
     representationMessage: string;
   };
+  costFields: string[];
+  dateField?: string;
+  dimensionFields: string[];
+}
+
+interface ArrowData {
+  label: string;
+  startValue: number;
+  endValue: number;
+  percentChange: number;
+  color: string;
+  datasetIndex: number;
 }
 
 /**
@@ -70,6 +82,13 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
   toolName,
   onRepresentationChange,
 }) => {
+  const [chartTypeOverride, setChartTypeOverride] = useState<
+    "bar" | "line" | null
+  >(null);
+  const [visibleDatasets, setVisibleDatasets] = useState<Set<number>>(
+    new Set(),
+  );
+
   const renderState = useMemo<RenderState>(() => {
     try {
       // Check if tool name contains 'cio_assist'
@@ -80,6 +99,9 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
           chartType: null,
           chartData: null,
           error: null,
+          costFields: [],
+          dateField: undefined,
+          dimensionFields: [],
         };
       }
 
@@ -103,6 +125,9 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
           chartType: null,
           chartData: null,
           error: "No records found",
+          costFields: [],
+          dateField: undefined,
+          dimensionFields: [],
         };
       }
 
@@ -158,6 +183,9 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
           processedRecords.length,
           chartData,
         ),
+        costFields,
+        dateField: dateFields.length > 0 ? dateFields[0] : undefined,
+        dimensionFields,
       };
     } catch (err) {
       const errorMessage =
@@ -169,6 +197,9 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
         chartData: null,
         error: errorMessage,
         representationInfo: undefined,
+        costFields: [],
+        dateField: undefined,
+        dimensionFields: [],
       };
     }
   }, [jsonLines, toolName]);
@@ -313,15 +344,83 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
       {/* Chart */}
       {chartData && (
         <div style={{ marginTop: "40px" }}>
-          <h3
+          <div
             style={{
-              fontSize: "1.125rem",
-              fontWeight: "600",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: "16px",
             }}
           >
-            {chartType === "line" ? "Trend Analysis" : "Cost Breakdown"}
-          </h3>
+            <h3
+              style={{
+                fontSize: "1.125rem",
+                fontWeight: "600",
+                margin: "0",
+              }}
+            >
+              {(chartTypeOverride || chartType) === "line"
+                ? "Trend Analysis"
+                : "Cost Breakdown"}
+            </h3>
+
+            {/* Chart Type Toggle */}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <button
+                onClick={() => setChartTypeOverride("bar")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border:
+                    chartTypeOverride === "bar" ||
+                    (chartTypeOverride === null && chartType === "bar")
+                      ? "2px solid #3b82f6"
+                      : "1px solid #d1d5db",
+                  backgroundColor:
+                    chartTypeOverride === "bar" ||
+                    (chartTypeOverride === null && chartType === "bar")
+                      ? "#eff6ff"
+                      : "#fff",
+                  color:
+                    chartTypeOverride === "bar" ||
+                    (chartTypeOverride === null && chartType === "bar")
+                      ? "#1e40af"
+                      : "#6b7280",
+                  fontWeight:
+                    chartTypeOverride === "bar" ||
+                    (chartTypeOverride === null && chartType === "bar")
+                      ? "600"
+                      : "500",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  transition: "all 0.2s",
+                }}
+              >
+                📊 Bar Chart
+              </button>
+              <button
+                onClick={() => setChartTypeOverride("line")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border:
+                    chartTypeOverride === "line"
+                      ? "2px solid #3b82f6"
+                      : "1px solid #d1d5db",
+                  backgroundColor:
+                    chartTypeOverride === "line" ? "#eff6ff" : "#fff",
+                  color: chartTypeOverride === "line" ? "#1e40af" : "#6b7280",
+                  fontWeight: chartTypeOverride === "line" ? "600" : "500",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  transition: "all 0.2s",
+                }}
+              >
+                📈 Line Chart
+              </button>
+            </div>
+          </div>
+
           <div
             style={{
               borderRadius: "8px",
@@ -333,7 +432,7 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
               alignItems: "center",
             }}
           >
-            {chartType === "line" ? (
+            {(chartTypeOverride || chartType) === "line" ? (
               <Line
                 data={chartData}
                 options={{
@@ -341,10 +440,22 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                   maintainAspectRatio: false,
                   plugins: {
                     legend: {
+                      display: true,
                       position: "bottom" as const,
                       labels: {
                         padding: 15,
-                        font: { size: 12 },
+                        font: { size: 12, weight: "bold" },
+                        usePointStyle: true,
+                        pointStyle: "circle",
+                        generateLabels: (chart) => {
+                          const datasets = chart.data.datasets;
+                          return datasets.map((dataset: any, i: number) => ({
+                            text: dataset.label || `Series ${i + 1}`,
+                            strokeStyle: dataset.borderColor || "#000",
+                            hidden: false,
+                            index: i,
+                          }));
+                        },
                       },
                     },
                     title: {
@@ -378,12 +489,25 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
+                  indexAxis: "x",
                   plugins: {
                     legend: {
+                      display: true,
                       position: "bottom" as const,
                       labels: {
                         padding: 15,
-                        font: { size: 12 },
+                        font: { size: 12, weight: "bold" },
+                        usePointStyle: true,
+                        pointStyle: "rect",
+                        generateLabels: (chart) => {
+                          const datasets = chart.data.datasets;
+                          return datasets.map((dataset: any, i: number) => ({
+                            text: dataset.label || `Series ${i + 1}`,
+                            fillStyle: dataset.backgroundColor || "#000",
+                            hidden: false,
+                            index: i,
+                          }));
+                        },
                       },
                     },
                     title: {

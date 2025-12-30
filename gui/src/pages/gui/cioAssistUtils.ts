@@ -116,8 +116,8 @@ export const determineChartType = (
       .filter((v) => v !== null),
   );
 
-  // Use line chart only if more than 3 unique dates, otherwise use bar chart
-  return uniqueDates.size > 3 ? "line" : "bar";
+  // Use line chart if more than 2 unique dates (i.e., 3 or more), otherwise use bar chart
+  return uniqueDates.size > 2 ? "line" : "bar";
 };
 
 /**

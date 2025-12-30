@@ -949,11 +949,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     description: "Use supported Vertex AI models",
     longDescription: "Use the supported Vertex AI models using Landing zone",
     icon: "vertexai.png",
-    packages: [
-      models.VertexGemini15Pro,
-      models.VertexGemini20Flash,
-      models.VertexGemini25Pro,
-    ],
+    packages: [models.VertexGemini25Pro],
     collectInputFor: [
       {
         inputType: "project",
@@ -988,11 +984,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     longDescription:
       "Authenticate to Vertex AI Enterprise using Workload Identity Federation (WIF) configuration JSON files.",
     icon: "vertexai.png",
-    packages: [
-      models.VertexGemini15Pro,
-      models.VertexGemini20Flash,
-      models.VertexGemini25Pro,
-    ],
+    packages: [models.VertexGemini25Pro],
     collectInputFor: [
       {
         inputType: "project",

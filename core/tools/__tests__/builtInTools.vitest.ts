@@ -3,9 +3,8 @@
  * Tests core functionality of each tool with mocked dependencies
  */
 
-import { describe, it, expect, beforeEach, vi, Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BuiltInToolNames } from "../builtIn";
-import * as toolImplementations from "../implementations";
 import * as toolDefinitions from "../definitions";
 
 // Type definitions for mocked extras
@@ -92,9 +91,7 @@ describe("Built-In Tools - Mock-Based Unit Tests", () => {
     describe("ReadCurrentlyOpenFile", () => {
       it("should have correct tool definition", () => {
         const tool = toolDefinitions.readCurrentlyOpenFileTool;
-        expect(tool.function.name).toBe(
-          BuiltInToolNames.ReadCurrentlyOpenFile,
-        );
+        expect(tool.function.name).toBe(BuiltInToolNames.ReadCurrentlyOpenFile);
         expect(tool.readonly).toBe(true);
       });
     });

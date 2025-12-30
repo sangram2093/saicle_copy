@@ -172,7 +172,7 @@ describe("handleToolCallBuffer", () => {
       type: "function",
       function: {
         name: "",
-        arguments: "123",
+        arguments: '"123"',
       },
       id: expect.any(String),
     });

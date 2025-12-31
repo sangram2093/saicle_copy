@@ -1,10 +1,10 @@
 /**
  * D3 Bar Chart Component
- * Renders a bar chart using D3.js
+ * Renders a bar chart using D3.js with darker palette, clickable legend, and bottom legend
  */
 
 import * as d3 from "d3";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface Dataset {
   label: string;
@@ -25,24 +25,55 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
   datasets,
   title = "Cost by Category",
   width = 800,
-  height = 500,
+  height = 550,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [hiddenDatasets, setHiddenDatasets] = useState<Set<string>>(new Set());
+
+  // Darker color palette
+  const darkerPalette = [
+    "#1f77b4", // darker blue
+    "#d62728", // darker red
+    "#2ca02c", // darker green
+    "#ff7f0e", // darker orange
+    "#9467bd", // darker purple
+    "#8c564b", // darker brown
+    "#e377c2", // darker pink
+    "#7f7f7f", // darker gray
+    "#bcbd22", // darker olive
+    "#17becf", // darker cyan
+  ];
 
   useEffect(() => {
     if (!svgRef.current || !labels.length || !datasets.length) return;
 
-    const margin = { top: 40, right: 30, bottom: 60, left: 80 };
+    const margin = { top: 40, right: 30, bottom: 140, left: 80 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
 
     // Clear previous content
     d3.select(svgRef.current).selectAll("*").remove();
 
+    // Filter visible datasets
+    const visibleDatasets = datasets.filter(
+      (d) => !hiddenDatasets.has(d.label),
+    );
+
+    if (visibleDatasets.length === 0) {
+      // If all datasets are hidden, show SVG only
+      d3.select(svgRef.current)
+        .attr("width", width)
+        .attr("height", height)
+        .style("background-color", "#f9fafb")
+        .style("border-radius", "8px")
+        .style("border", "1px solid #e5e7eb");
+      return;
+    }
+
     // Prepare data structure for grouped bars
     const groupedData = labels.map((label, i) => {
       const obj: any = { category: label };
-      datasets.forEach((dataset) => {
+      visibleDatasets.forEach((dataset) => {
         obj[dataset.label] = dataset.data[i] || 0;
       });
       return obj;
@@ -66,50 +97,47 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
 
     const x1 = d3
       .scaleBand()
-      .domain(datasets.map((d) => d.label))
+      .domain(visibleDatasets.map((d) => d.label))
       .range([0, x0.bandwidth()])
       .padding(0.05);
 
     const yMax = Math.max(
-      ...datasets.map((dataset) => Math.max(...dataset.data)),
+      ...visibleDatasets.map((dataset) => Math.max(...dataset.data)),
     );
     const y = d3
       .scaleLinear()
       .domain([0, yMax * 1.1])
       .range([plotHeight, 0]);
 
-    // Color scale
+    // Color scale with darker palette
     const color = d3
       .scaleOrdinal()
-      .domain(datasets.map((d) => d.label))
+      .domain(visibleDatasets.map((d) => d.label))
       .range(
-        datasets.map((d) => {
-          const bgColor = d.backgroundColor;
-          return typeof bgColor === "string" ? bgColor : bgColor[0];
-        }),
+        visibleDatasets.map(
+          (d, idx) => darkerPalette[idx % darkerPalette.length],
+        ),
       );
 
-    // Render bars
-    g.selectAll("g.layer")
-      .data(datasets)
+    // Render bars with grouped layout
+    g.selectAll("g.group")
+      .data(groupedData)
       .join("g")
-      .attr("class", "layer")
-      .attr("fill", (d) => color(d.label) as string)
+      .attr("class", "group")
+      .attr("transform", (d) => `translate(${x0(d.category)},0)`)
       .selectAll("rect")
-      .data((d) => d.data.map((value, i) => ({ value, categoryIndex: i })))
+      .data((d) =>
+        visibleDatasets.map((dataset) => ({
+          label: dataset.label,
+          value: d[dataset.label],
+        })),
+      )
       .join("rect")
-      .attr("x", (d) => {
-        const datasetIndex = datasets.findIndex((ds) =>
-          ds.data.includes((d.value as number) + 0),
-        );
-        return (
-          x0(labels[d.categoryIndex])! +
-          x1(datasets[datasetIndex >= 0 ? datasetIndex : 0].label)!
-        );
-      })
-      .attr("y", (d) => y(d.value as number))
+      .attr("x", (d) => x1(d.label) || 0)
+      .attr("y", (d) => y(d.value))
       .attr("width", x1.bandwidth())
-      .attr("height", (d) => plotHeight - y(d.value as number))
+      .attr("height", (d) => plotHeight - y(d.value))
+      .attr("fill", (d) => color(d.label) as string)
       .attr("opacity", 0.8)
       .on("mouseover", function () {
         d3.select(this).attr("opacity", 1);
@@ -155,34 +183,58 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
       .style("font-weight", "bold")
       .text(title);
 
-    // Legend
-    const legend = svg
+    // Legend at bottom in 3-column horizontal layout
+    const legendItemsPerRow = 3;
+    const legendItemWidth = plotWidth / legendItemsPerRow;
+    const legendGroup = svg
       .append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 12)
-      .attr("text-anchor", "end")
-      .selectAll("g")
-      .data(datasets)
-      .join("g")
-      .attr("transform", (d, i) => `translate(${width - 20},${20 + i * 20})`);
+      .attr("class", "legend")
+      .attr("transform", `translate(${margin.left},${height - 100})`);
 
-    legend
-      .append("rect")
-      .attr("x", -19)
-      .attr("width", 19)
-      .attr("height", 19)
-      .attr("fill", (d) => {
-        const bgColor = d.backgroundColor;
-        return typeof bgColor === "string" ? bgColor : bgColor[0];
-      });
+    datasets.forEach((dataset, i) => {
+      const row = Math.floor(i / legendItemsPerRow);
+      const col = i % legendItemsPerRow;
+      const legendX = col * legendItemWidth;
+      const legendY = row * 30;
 
-    legend
-      .append("text")
-      .attr("x", -24)
-      .attr("y", 9.5)
-      .attr("dy", "0.32em")
-      .text((d) => d.label);
-  }, [labels, datasets, title, width, height]);
+      const legendItem = legendGroup
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", `translate(${legendX},${legendY})`)
+        .style("cursor", "pointer")
+        .on("click", function () {
+          const newHidden = new Set(hiddenDatasets);
+          if (newHidden.has(dataset.label)) {
+            newHidden.delete(dataset.label);
+          } else {
+            newHidden.add(dataset.label);
+          }
+          setHiddenDatasets(newHidden);
+        });
+
+      const isHidden = hiddenDatasets.has(dataset.label);
+      const itemColor = isHidden
+        ? "#d1d5db"
+        : darkerPalette[i % darkerPalette.length];
+
+      legendItem
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 18)
+        .attr("height", 18)
+        .attr("fill", itemColor);
+
+      legendItem
+        .append("text")
+        .attr("x", 24)
+        .attr("y", 9)
+        .attr("dy", "0.32em")
+        .attr("fill", itemColor)
+        .style("font-size", "12px")
+        .text(dataset.label);
+    });
+  }, [labels, datasets, title, width, height, hiddenDatasets]);
 
   return <svg ref={svgRef} />;
 };

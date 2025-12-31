@@ -43,6 +43,7 @@
     "anser": "^2.3.2",
     "clsx": "^2.1.1",
     "core": "file:../core",
+    "d3": "^7.8.5",
     "diff": "^8.0.2",
     "dompurify": "^3.0.6",
     "downshift": "^7.6.0",

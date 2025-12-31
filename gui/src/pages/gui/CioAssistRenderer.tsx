@@ -1,21 +1,11 @@
 /**
  * CioAssistRenderer Component
- * Renders cio_assist tool output as HTML table and charts
+ * Renders cio_assist tool output as HTML table and charts using D3.js
  */
 
-import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-} from "chart.js";
 import React, { useEffect, useMemo, useState } from "react";
-import { Bar, Line } from "react-chartjs-2";
+import D3BarChart from "./D3BarChart";
+import D3LineChart from "./D3LineChart";
 import {
   classifyFields,
   determineChartType,
@@ -26,18 +16,6 @@ import {
   prepareLineChartData,
   processRecords,
 } from "./cioAssistUtils";
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-);
 
 interface CioAssistRendererProps {
   jsonLines: string;
@@ -486,110 +464,20 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
               minHeight: "500px",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
             }}
           >
             {(chartTypeOverride || chartType) === "line" ? (
-              <Line
-                data={chartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: "bottom" as const,
-                      labels: {
-                        padding: 15,
-                        font: { size: 12, weight: "bold" },
-                        usePointStyle: true,
-                        pointStyle: "circle",
-                        generateLabels: (chart) => {
-                          const datasets = chart.data.datasets;
-                          return datasets.map((dataset: any, i: number) => ({
-                            text: dataset.label || `Series ${i + 1}`,
-                            strokeStyle: dataset.borderColor || "#000",
-                            hidden: false,
-                            index: i,
-                          }));
-                        },
-                      },
-                    },
-                    title: {
-                      display: true,
-                      text: "Cost Trends Over Time",
-                      font: { size: 14, weight: "bold" },
-                    },
-                  },
-                  scales: {
-                    y: {
-                      title: {
-                        display: true,
-                        text: "Cost (EUR)",
-                        font: { weight: "bold" },
-                      },
-                      beginAtZero: true,
-                    },
-                    x: {
-                      title: {
-                        display: true,
-                        text: "Date",
-                        font: { weight: "bold" },
-                      },
-                    },
-                  },
-                }}
+              <D3LineChart
+                labels={chartData.labels}
+                datasets={chartData.datasets}
+                title="Trend Analysis"
               />
             ) : (
-              <Bar
-                data={chartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  indexAxis: "x",
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: "bottom" as const,
-                      labels: {
-                        padding: 15,
-                        font: { size: 12, weight: "bold" },
-                        usePointStyle: true,
-                        pointStyle: "rect",
-                        generateLabels: (chart) => {
-                          const datasets = chart.data.datasets;
-                          return datasets.map((dataset: any, i: number) => ({
-                            text: dataset.label || `Series ${i + 1}`,
-                            fillStyle: dataset.backgroundColor || "#000",
-                            hidden: false,
-                            index: i,
-                          }));
-                        },
-                      },
-                    },
-                    title: {
-                      display: true,
-                      text: "Cost by Category",
-                      font: { size: 14, weight: "bold" },
-                    },
-                  },
-                  scales: {
-                    y: {
-                      title: {
-                        display: true,
-                        text: "Cost (EUR)",
-                        font: { weight: "bold" },
-                      },
-                      beginAtZero: true,
-                    },
-                    x: {
-                      title: {
-                        display: true,
-                        text: "Category",
-                        font: { weight: "bold" },
-                      },
-                    },
-                  },
-                }}
+              <D3BarChart
+                labels={chartData.labels}
+                datasets={chartData.datasets}
+                title="Cost Breakdown"
               />
             )}
           </div>

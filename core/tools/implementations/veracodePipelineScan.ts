@@ -350,21 +350,31 @@ export const veracodePipelineScanImpl: ToolImpl = async (
     `Uploading ${segmentCount} scan segments...`,
   );
 
+  const { default: FormData } = await import("form-data");
   const segments = splitIntoSegments(artifactBuffer, segmentCount);
   for (let i = 0; i < segments.length; i += 1) {
     const segmentUrl = new URL(
       `${pipelineBase}/scans/${scanId}/segments/${i}`,
     );
+    const form = new FormData();
+    form.append("file", segments[i], {
+      filename: "file",
+    });
+    const headers = form.getHeaders();
+    try {
+      const length = form.getLengthSync();
+      headers["Content-Length"] = String(length);
+    } catch {
+      // ignore length errors
+    }
+
     await veracodeRequest(
       extras,
       { apiKeyId, apiKeySecret, userAgent, proxyUrl },
       segmentUrl,
       "PUT",
-      segments[i],
-      {
-        "Content-Type": "application/octet-stream",
-        "Content-Length": `${segments[i].byteLength}`,
-      },
+      form,
+      headers,
     );
     if ((i + 1) % 5 === 0 || i + 1 === segments.length) {
       void extras.ide.showToast(

@@ -1910,6 +1910,31 @@ function extractServiceNowConfigInFlow(
   } catch (e) {
     // ignore extraction errors
   }
+
+  try {
+    const veracodeCfg = extractOptionalVeracodeConfig(
+      config as AssistantUnrolled,
+    );
+    if (
+      veracodeCfg &&
+      (veracodeCfg.apiKeyId ||
+        veracodeCfg.apiKeySecret ||
+        veracodeCfg.baseUrl ||
+        veracodeCfg.userAgent ||
+        veracodeCfg.proxy)
+    ) {
+      dbsaicleConfig.veracode = veracodeCfg;
+      if (!veracodeCfg.apiKeyId || !veracodeCfg.apiKeySecret) {
+        localErrors.push({
+          fatal: false,
+          message:
+            "Partial Veracode configuration found in config.yaml; provide `veracode.apiKeyId` and `veracode.apiKeySecret` (or set VERACODE_API_KEY_ID / VERACODE_API_KEY_SECRET) for full functionality.",
+        });
+      }
+    }
+  } catch (e) {
+    // ignore extraction errors
+  }
 }
 
 function extractOptionalServiceNowConfig(config: AssistantUnrolled) {
@@ -2227,6 +2252,163 @@ function extractOptionalOssVulnerabilityConfig(config: AssistantUnrolled) {
   }
 
   return oss;
+}
+
+function extractOptionalVeracodeConfig(config: AssistantUnrolled) {
+  const veracode: {
+    apiKeyId?: string;
+    apiKeySecret?: string;
+    baseUrl?: string;
+    userAgent?: string;
+    proxy?: {
+      url?: string;
+      host?: string;
+      port?: number;
+      username?: string;
+      password?: string;
+    };
+  } = {};
+
+  const ensureProxy = () => {
+    if (!veracode.proxy) veracode.proxy = {};
+    return veracode.proxy;
+  };
+
+  const toNumber = (value: any) => {
+    if (value === undefined || value === null || value === "") return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  try {
+    const asAny = config as any;
+    const block = asAny.veracode as
+      | {
+          apiKeyId?: string;
+          apiKeySecret?: string;
+          baseUrl?: string;
+          userAgent?: string;
+          proxy?: {
+            url?: string;
+            host?: string;
+            port?: number | string;
+            username?: string;
+            password?: string;
+          };
+          api_key_id?: string;
+          api_key_secret?: string;
+          base_url?: string;
+          user_agent?: string;
+          proxy_url?: string;
+          proxy_host?: string;
+          proxy_port?: number | string;
+          proxy_username?: string;
+          proxy_password?: string;
+        }
+      | undefined;
+    if (block) {
+      if (block.apiKeyId) veracode.apiKeyId = String(block.apiKeyId);
+      if (!veracode.apiKeyId && block.api_key_id) {
+        veracode.apiKeyId = String(block.api_key_id);
+      }
+      if (block.apiKeySecret) veracode.apiKeySecret = String(block.apiKeySecret);
+      if (!veracode.apiKeySecret && block.api_key_secret) {
+        veracode.apiKeySecret = String(block.api_key_secret);
+      }
+      if (block.baseUrl) veracode.baseUrl = String(block.baseUrl);
+      if (!veracode.baseUrl && block.base_url) {
+        veracode.baseUrl = String(block.base_url);
+      }
+      if (block.userAgent) veracode.userAgent = String(block.userAgent);
+      if (!veracode.userAgent && block.user_agent) {
+        veracode.userAgent = String(block.user_agent);
+      }
+
+      if (block.proxy) {
+        const proxy = ensureProxy();
+        if (block.proxy.url) proxy.url = String(block.proxy.url);
+        if (block.proxy.host) proxy.host = String(block.proxy.host);
+        if (typeof block.proxy.port !== "undefined") {
+          proxy.port = toNumber(block.proxy.port);
+        }
+        if (block.proxy.username) proxy.username = String(block.proxy.username);
+        if (block.proxy.password) proxy.password = String(block.proxy.password);
+      }
+
+      if (block.proxy_url) ensureProxy().url = String(block.proxy_url);
+      if (block.proxy_host) ensureProxy().host = String(block.proxy_host);
+      if (typeof block.proxy_port !== "undefined") {
+        ensureProxy().port = toNumber(block.proxy_port);
+      }
+      if (block.proxy_username)
+        ensureProxy().username = String(block.proxy_username);
+      if (block.proxy_password)
+        ensureProxy().password = String(block.proxy_password);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const envMap = (config as any).env as Record<string, any> | undefined;
+    if (envMap) {
+      if (!veracode.apiKeyId && envMap.VERACODE_API_KEY_ID)
+        veracode.apiKeyId = String(envMap.VERACODE_API_KEY_ID);
+      if (!veracode.apiKeySecret && envMap.VERACODE_API_KEY_SECRET)
+        veracode.apiKeySecret = String(envMap.VERACODE_API_KEY_SECRET);
+      if (!veracode.baseUrl && envMap.VERACODE_BASE_URL)
+        veracode.baseUrl = String(envMap.VERACODE_BASE_URL);
+      if (!veracode.userAgent && envMap.VERACODE_USER_AGENT)
+        veracode.userAgent = String(envMap.VERACODE_USER_AGENT);
+
+      if (!veracode.proxy?.url && envMap.VERACODE_PROXY_URL)
+        ensureProxy().url = String(envMap.VERACODE_PROXY_URL);
+      if (!veracode.proxy?.host && envMap.VERACODE_PROXY_HOST)
+        ensureProxy().host = String(envMap.VERACODE_PROXY_HOST);
+      if (
+        typeof veracode.proxy?.port === "undefined" &&
+        envMap.VERACODE_PROXY_PORT
+      ) {
+        ensureProxy().port = toNumber(envMap.VERACODE_PROXY_PORT);
+      }
+      if (!veracode.proxy?.username && envMap.VERACODE_PROXY_USERNAME)
+        ensureProxy().username = String(envMap.VERACODE_PROXY_USERNAME);
+      if (!veracode.proxy?.password && envMap.VERACODE_PROXY_PASSWORD)
+        ensureProxy().password = String(envMap.VERACODE_PROXY_PASSWORD);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    const asAny = config as any;
+    if (!veracode.apiKeyId && asAny.veracode_api_key_id)
+      veracode.apiKeyId = String(asAny.veracode_api_key_id);
+    if (!veracode.apiKeySecret && asAny.veracode_api_key_secret)
+      veracode.apiKeySecret = String(asAny.veracode_api_key_secret);
+    if (!veracode.baseUrl && asAny.veracode_base_url)
+      veracode.baseUrl = String(asAny.veracode_base_url);
+    if (!veracode.userAgent && asAny.veracode_user_agent)
+      veracode.userAgent = String(asAny.veracode_user_agent);
+    if (!veracode.proxy?.url && asAny.veracode_proxy_url)
+      ensureProxy().url = String(asAny.veracode_proxy_url);
+    if (!veracode.proxy?.host && asAny.veracode_proxy_host)
+      ensureProxy().host = String(asAny.veracode_proxy_host);
+    if (
+      typeof veracode.proxy?.port === "undefined" &&
+      asAny.veracode_proxy_port
+    ) {
+      ensureProxy().port = toNumber(asAny.veracode_proxy_port);
+    }
+    if (!veracode.proxy?.username && asAny.veracode_proxy_username)
+      ensureProxy().username = String(asAny.veracode_proxy_username);
+    if (!veracode.proxy?.password && asAny.veracode_proxy_password)
+      ensureProxy().password = String(asAny.veracode_proxy_password);
+  } catch (e) {
+    // ignore
+  }
+
+  return veracode;
 }
 
 export async function loadDbSaicleConfigFromYaml(options: {

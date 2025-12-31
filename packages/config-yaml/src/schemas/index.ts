@@ -166,6 +166,31 @@ export const ossVulnerabilitySchema = z.object({
   maven_home: z.string().optional(),
 });
 
+export const veracodeSchema = z.object({
+  apiKeyId: z.string().optional(),
+  apiKeySecret: z.string().optional(),
+  baseUrl: z.string().optional(),
+  userAgent: z.string().optional(),
+  proxy: z
+    .object({
+      url: z.string().optional(),
+      host: z.string().optional(),
+      port: z.number().optional(),
+      username: z.string().optional(),
+      password: z.string().optional(),
+    })
+    .optional(),
+  api_key_id: z.string().optional(),
+  api_key_secret: z.string().optional(),
+  base_url: z.string().optional(),
+  user_agent: z.string().optional(),
+  proxy_url: z.string().optional(),
+  proxy_host: z.string().optional(),
+  proxy_port: z.number().optional(),
+  proxy_username: z.string().optional(),
+  proxy_password: z.string().optional(),
+});
+
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
   sourceCodeUrl: z.string().optional(),
@@ -190,6 +215,7 @@ export const baseConfigYamlSchema = z.object({
   confluence: confluenceSchema.optional(),
   servicenow: serviceNowSchema.optional(),
   ossVulnerability: ossVulnerabilitySchema.optional(),
+  veracode: veracodeSchema.optional(),
 });
 
 const modelsUsesSchema = z

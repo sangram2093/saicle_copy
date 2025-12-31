@@ -1276,6 +1276,20 @@ declare global {
       mavenCommand?: string;
       mavenHome?: string;
     };
+    // Optional Veracode pipeline scan configuration from config.yaml
+    veracode?: {
+      apiKeyId?: string;
+      apiKeySecret?: string;
+      baseUrl?: string;
+      userAgent?: string;
+      proxy?: {
+        url?: string;
+        host?: string;
+        port?: number;
+        username?: string;
+        password?: string;
+      };
+    };
   }
   
   export interface BrowserSerializedDbSaicleConfig {

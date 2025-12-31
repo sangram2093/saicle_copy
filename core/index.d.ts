@@ -1809,6 +1809,19 @@ export interface DbSaicleConfig {
     mavenCommand?: string;
     mavenHome?: string;
   };
+  veracode?: {
+    apiKeyId?: string;
+    apiKeySecret?: string;
+    baseUrl?: string;
+    userAgent?: string;
+    proxy?: {
+      url?: string;
+      host?: string;
+      port?: number;
+      username?: string;
+      password?: string;
+    };
+  };
 }
 
 export interface BrowserSerializedDbSaicleConfig {

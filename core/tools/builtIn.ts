@@ -123,6 +123,7 @@ export enum BuiltInToolNames {
   ParseExcel = "parse_excel",
   ParseDocx = "parse_docx",
   OssVulnerabilityScan = "oss_vulnerability_scan",
+  VeracodePipelineScan = "veracode_pipeline_scan",
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";

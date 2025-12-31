@@ -367,21 +367,23 @@ export async function unrollBlocks(
     confluence: assistant.confluence,
     servicenow: assistant.servicenow,
     ossVulnerability: assistant.ossVulnerability,
+    veracode: assistant.veracode,
   };
 
-  const sections: (keyof Omit<
-    ConfigYaml,
-    | "name"
-    | "version"
-    | "rules"
-    | "schema"
-    | "metadata"
-    | "env"
-    | "jira"
-    | "confluence"
-    | "servicenow"
-    | "ossVulnerability"
-  >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
+    const sections: (keyof Omit<
+      ConfigYaml,
+      | "name"
+      | "version"
+      | "rules"
+      | "schema"
+      | "metadata"
+      | "env"
+      | "jira"
+      | "confluence"
+      | "servicenow"
+      | "ossVulnerability"
+      | "veracode"
+    >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // Process all sections in parallel
   const sectionPromises = sections.map(async (section) => {

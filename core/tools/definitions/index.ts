@@ -13,6 +13,7 @@ export { parsePdfTool } from "./parsePdf";
 export { parseExcelTool } from "./parseExcel";
 export { parseDocxTool } from "./parseDocx";
 export { ossVulnerabilityScanTool } from "./ossVulnerabilityScan";
+export { veracodePipelineScanTool } from "./veracodePipelineScan";
 export { multiEditTool } from "./multiEdit";
 export { readCurrentlyOpenFileTool } from "./readCurrentlyOpenFile";
 export { readFileTool } from "./readFile";

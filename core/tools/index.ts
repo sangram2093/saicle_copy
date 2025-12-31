@@ -19,6 +19,7 @@ export const getBaseToolDefinitions = () => [
   toolDefinitions.parseExcelTool,
   toolDefinitions.parseDocxTool,
   toolDefinitions.ossVulnerabilityScanTool,
+  toolDefinitions.veracodePipelineScanTool,
   toolDefinitions.browserActionTool,
   toolDefinitions.singleFindAndReplaceTool,
 

@@ -15,6 +15,7 @@ type SectionKey = Exclude<
   | "confluence"
   | "servicenow"
   | "ossVulnerability"
+  | "veracode"
 >;
 
 interface EditBlockButtonProps<T extends SectionKey> {

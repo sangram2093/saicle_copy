@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { fetchwithRequestOptions } from "@dbsaicledev/fetch";
+import type { RequestInit } from "node-fetch";
 
 import { ContextItem, ToolExtras } from "../..";
 import { ToolImpl } from ".";

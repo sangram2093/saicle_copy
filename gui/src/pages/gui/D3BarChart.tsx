@@ -189,7 +189,7 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
     const legendGroup = svg
       .append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${margin.left},${height - 100})`);
+      .attr("transform", `translate(${margin.left},${height - 70})`);
 
     datasets.forEach((dataset, i) => {
       const row = Math.floor(i / legendItemsPerRow);

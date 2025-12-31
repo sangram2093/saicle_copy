@@ -155,48 +155,56 @@ const D3LineChart: React.FC<D3LineChartProps> = ({
         const y1 = y(firstValue);
         const y2 = y(lastValue);
 
-        // Arrow start point (3px above first data point)
-        const startY = y1 - 3;
+        // Arrow: 3 sides of rectangle bounded at bottom by the actual line
+        // Top left point (3px above first data point)
+        const topLeftY = y1 - 8;
+        // Top right point (3px above last data point)
+        const topRightY = y2 - 8;
+        // Bottom points are on the actual line data
+        const bottomLeftY = y1;
+        const bottomRightY = y2;
 
-        // Curve peak position (depends on datasetIdx)
-        const curveTop = -10 - datasetIdx * 10;
-
-        // Create path for arrow
+        // Create path for arrow (3 sides: top, left, right - bottom is bounded by actual line)
         const arrowPath = `
-          M ${x1} ${startY}
-          Q ${(x1 + x2) / 2} ${curveTop} ${x2} ${y2 - 3}
+          M ${x1} ${topLeftY}
+          L ${x2} ${topRightY}
+          L ${x2} ${bottomRightY}
+          L ${x1} ${bottomLeftY}
+          Z
         `;
 
-        // Add arrow path
+        // Add arrow path (fill with transparency)
         g.append("path")
           .attr("d", arrowPath)
-          .attr("fill", "none")
+          .attr("fill", color(dataset.label))
+          .attr("opacity", 0.15)
           .attr("stroke", color(dataset.label))
-          .attr("stroke-width", 3)
-          .attr("stroke-dasharray", "5,5")
-          .attr("opacity", 0.6);
+          .attr("stroke-width", 1.5)
+          .attr("stroke-dasharray", "3,3");
 
-        // Add arrow head
+        // Add arrow head at the end
+        const arrowHeadSize = 6;
         g.append("polygon")
           .attr(
             "points",
-            `${x2},${y2 - 3} ${x2 - 5},${y2 - 8} ${x2 - 5},${y2 + 2}`,
+            `${x2},${topRightY} ${x2 - arrowHeadSize},${topRightY - arrowHeadSize} ${x2 + arrowHeadSize},${topRightY - arrowHeadSize}`,
           )
           .attr("fill", color(dataset.label))
-          .attr("opacity", 0.6);
+          .attr("opacity", 0.7);
 
-        // Add percentage change annotation
+        // Add percentage change annotation on the horizontal middle line of the arrow
         const textX = (x1 + x2) / 2;
-        const textY = curveTop - 15;
+        const textY = (topLeftY + topRightY) / 2 + 3; // Position text on the arrow line with slight offset down
 
         g.append("text")
           .attr("x", textX)
           .attr("y", textY)
           .attr("text-anchor", "middle")
-          .attr("font-size", "11px")
+          .attr("font-size", "12px")
           .attr("font-weight", "bold")
           .attr("fill", color(dataset.label))
-          .attr("opacity", 0.7)
+          .attr("opacity", 0.9)
+          .attr("pointer-events", "none")
           .text(`${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`);
       }
     });
@@ -243,7 +251,7 @@ const D3LineChart: React.FC<D3LineChartProps> = ({
     const legendGroup = svg
       .append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${margin.left}, ${height - 100})`);
+      .attr("transform", `translate(${margin.left}, ${height - 70})`);
 
     datasets.forEach((dataset, i) => {
       const row = Math.floor(i / 3);

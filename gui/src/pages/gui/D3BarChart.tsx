@@ -183,19 +183,20 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
       .style("font-weight", "bold")
       .text(title);
 
-    // Legend at bottom in 3-column horizontal layout
-    const legendItemsPerRow = 3;
+    // Legend at bottom in 7-column horizontal layout to support up to 21 items
+    const legendItemsPerRow = 7;
     const legendItemWidth = plotWidth / legendItemsPerRow;
+    const legendItemHeight = 24; // Reduced from 30 to fit more rows
     const legendGroup = svg
       .append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${margin.left},${height - 70})`);
+      .attr("transform", `translate(${margin.left},${height - 85})`);
 
     datasets.forEach((dataset, i) => {
       const row = Math.floor(i / legendItemsPerRow);
       const col = i % legendItemsPerRow;
       const legendX = col * legendItemWidth;
-      const legendY = row * 30;
+      const legendY = row * legendItemHeight;
 
       const legendItem = legendGroup
         .append("g")
@@ -221,17 +222,18 @@ const D3BarChart: React.FC<D3BarChartProps> = ({
         .append("rect")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 18)
-        .attr("height", 18)
+        .attr("width", 14)
+        .attr("height", 14)
         .attr("fill", itemColor);
 
       legendItem
         .append("text")
-        .attr("x", 24)
-        .attr("y", 9)
+        .attr("x", 20)
+        .attr("y", 7)
         .attr("dy", "0.32em")
         .attr("fill", itemColor)
-        .style("font-size", "12px")
+        .style("font-size", "10px")
+        .style("font-family", "sans-serif")
         .text(dataset.label);
     });
   }, [labels, datasets, title, width, height, hiddenDatasets]);

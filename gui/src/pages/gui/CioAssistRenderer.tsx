@@ -461,7 +461,7 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
               border: "1px solid #e5e7eb",
               padding: "20px",
               backgroundColor: "#f9fafb",
-              minHeight: "500px",
+              minHeight: "650px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -472,12 +472,16 @@ export const CioAssistRenderer: React.FC<CioAssistRendererProps> = ({
                 labels={chartData.labels}
                 datasets={chartData.datasets}
                 title="Trend Analysis"
+                width={950}
+                height={650}
               />
             ) : (
               <D3BarChart
                 labels={chartData.labels}
                 datasets={chartData.datasets}
                 title="Cost Breakdown"
+                width={950}
+                height={650}
               />
             )}
           </div>

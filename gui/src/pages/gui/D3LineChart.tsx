@@ -246,18 +246,20 @@ const D3LineChart: React.FC<D3LineChartProps> = ({
       .style("font-weight", "bold")
       .text(title);
 
-    // Bottom legend (3-column layout)
-    const legendItemWidth = plotWidth / 3;
+    // Bottom legend (7-column layout to support up to 21 items)
+    const legendItemsPerRow = 7;
+    const legendItemWidth = plotWidth / legendItemsPerRow;
+    const legendItemHeight = 24; // Reduced from 30 to fit more rows
     const legendGroup = svg
       .append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${margin.left}, ${height - 70})`);
+      .attr("transform", `translate(${margin.left}, ${height - 85})`);
 
     datasets.forEach((dataset, i) => {
-      const row = Math.floor(i / 3);
-      const col = i % 3;
+      const row = Math.floor(i / legendItemsPerRow);
+      const col = i % legendItemsPerRow;
       const legendX = col * legendItemWidth;
-      const legendY = row * 30;
+      const legendY = row * legendItemHeight;
 
       const isHidden = hiddenDatasets.has(dataset.label);
       const itemColor = isHidden ? "#d1d5db" : color(dataset.label);
@@ -280,26 +282,26 @@ const D3LineChart: React.FC<D3LineChartProps> = ({
       legendItem
         .append("line")
         .attr("x1", 0)
-        .attr("x2", 12)
-        .attr("y1", 5)
-        .attr("y2", 5)
+        .attr("x2", 10)
+        .attr("y1", 3)
+        .attr("y2", 3)
         .attr("stroke", itemColor)
-        .attr("stroke-width", 2.5);
+        .attr("stroke-width", 2);
 
-      // Circle indicator
+      // Circle indicator (smaller)
       legendItem
         .append("circle")
-        .attr("cx", 6)
-        .attr("cy", 5)
-        .attr("r", 2.5)
+        .attr("cx", 5)
+        .attr("cy", 3)
+        .attr("r", 2)
         .attr("fill", itemColor);
 
-      // Label
+      // Label (smaller font)
       legendItem
         .append("text")
-        .attr("x", 18)
-        .attr("y", 9)
-        .attr("font-size", "12px")
+        .attr("x", 16)
+        .attr("y", 7)
+        .attr("font-size", "10px")
         .attr("font-family", "sans-serif")
         .attr("fill", itemColor)
         .text(dataset.label);

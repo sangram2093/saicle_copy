@@ -262,13 +262,20 @@ function buildReport(findings: any[], artifactName: string, scanId: string) {
   return lines.join("\n");
 }
 
+function toFsPath(maybeUri: string) {
+  return maybeUri.startsWith("file:") ? fileURLToPath(maybeUri) : maybeUri;
+}
+
 function resolveOptionalPath(
   value: string | undefined,
   workspaceDir: string | undefined,
 ) {
   if (!value) return undefined;
+  if (value.startsWith("file:")) {
+    return fileURLToPath(value);
+  }
   if (path.isAbsolute(value)) return value;
-  if (workspaceDir) return path.join(workspaceDir, value);
+  if (workspaceDir) return path.join(toFsPath(workspaceDir), value);
   return path.resolve(value);
 }
 
@@ -276,16 +283,26 @@ export const veracodePipelineScanImpl: ToolImpl = async (
   args: VeracodePipelineScanArgs,
   extras,
 ) => {
-  const requestedPath = getStringArg(args, "artifact_path");
-  const resolvedUri = await resolveRelativePathInDir(requestedPath, extras.ide);
-  if (!resolvedUri) {
-    throw new Error(`Artifact not found: ${requestedPath}`);
-  }
+  const requestedPath = getStringArg(args, "artifact_path").trim();
+  let artifactPath: string | undefined;
 
-  const artifactPath =
-    resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
-      ? fileURLToPath(resolvedUri)
-      : path.resolve(requestedPath);
+  if (requestedPath.startsWith("file:")) {
+    artifactPath = fileURLToPath(requestedPath);
+  } else if (path.isAbsolute(requestedPath)) {
+    artifactPath = requestedPath;
+  } else {
+    const resolvedUri = await resolveRelativePathInDir(
+      requestedPath,
+      extras.ide,
+    );
+    if (!resolvedUri) {
+      throw new Error(`Artifact not found: ${requestedPath}`);
+    }
+    artifactPath =
+      resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
+        ? fileURLToPath(resolvedUri)
+        : path.resolve(requestedPath);
+  }
 
   if (!fs.existsSync(artifactPath)) {
     throw new Error(`Artifact not found: ${artifactPath}`);

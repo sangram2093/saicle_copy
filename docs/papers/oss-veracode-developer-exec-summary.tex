@@ -1,0 +1,64 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=0.9in]{geometry}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{hyperref}
+
+\title{Executive Summary: Shift-Left Remediation with DbSaicle}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\setlist[itemize]{noitemsep,topsep=0pt}
+
+\section*{Summary}
+
+DbSaicle enables remediation-first security by making high and critical
+findings actionable inside the developer workflow. Two tools power this
+approach:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{oss\_vulnerability\_scan} for dependency vulnerabilities
+  \item \texttt{veracode\_pipeline\_scan} for static analysis findings
+\end{itemize}
+
+The scans are inputs. The value comes from a consistent remediation loop:
+scan, triage, fix, rebuild, and rescan until findings are cleared or accepted.
+
+\section*{Why This Matters}
+
+\begin{itemize}[leftmargin=*]
+  \item Fixes issues while context is fresh, reducing remediation time
+  \item Cuts rework by addressing findings before release
+  \item Increases release confidence through repeatable validation
+\end{itemize}
+
+\section*{Workflow References}
+
+\begin{itemize}[leftmargin=*]
+  \item OSS Remediation Workflow: \texttt{<<OSS\_REMEDIATION\_WORKFLOW\_LINK>>}
+  \item Veracode Remediation Workflow: \texttt{<<VERACODE\_REMEDIATION\_WORKFLOW\_LINK>>}
+\end{itemize}
+
+\section*{Configuration (Excerpt)}
+
+\begin{verbatim}
+ossVulnerability:
+  jfrogPlatformUrl: "https://your-jfrog-host"
+  jfrogAccessToken: "${JFROG_ACCESS_TOKEN}"
+
+veracode:
+  apiKeyId: "${VERACODE_API_KEY_ID}"
+  apiKeySecret: "${VERACODE_API_KEY_SECRET}"
+\end{verbatim}
+
+\section*{Conclusion}
+
+Shift-left security succeeds when remediation is easy and repeatable. DbSaicle
+tools turn scans into concrete outcomes, enabling teams to deliver faster while
+maintaining higher security standards.
+
+\end{document}

@@ -24,16 +24,25 @@ function formatJson(obj: any) {
 }
 
 export const parsePdfImpl: ToolImpl = async (args: ParsePdfArgs, extras) => {
-  const requestedPath = getStringArg(args, "pdfPath");
-  const resolvedUri = await resolveRelativePathInDir(requestedPath, extras.ide);
-  if (!resolvedUri) {
-    throw new Error(`PDF not found: ${requestedPath}`);
+  const requestedPath = getStringArg(args, "pdfPath").trim();
+  let pdfPath: string;
+  if (requestedPath.startsWith("file:")) {
+    pdfPath = fileURLToPath(requestedPath);
+  } else if (path.isAbsolute(requestedPath)) {
+    pdfPath = requestedPath;
+  } else {
+    const resolvedUri = await resolveRelativePathInDir(
+      requestedPath,
+      extras.ide,
+    );
+    if (!resolvedUri) {
+      throw new Error(`PDF not found: ${requestedPath}`);
+    }
+    pdfPath =
+      resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
+        ? fileURLToPath(resolvedUri)
+        : path.resolve(requestedPath);
   }
-
-  const pdfPath =
-    resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
-      ? fileURLToPath(resolvedUri)
-      : path.resolve(requestedPath);
 
   if (!fs.existsSync(pdfPath)) {
     throw new Error(`PDF not found: ${pdfPath}`);

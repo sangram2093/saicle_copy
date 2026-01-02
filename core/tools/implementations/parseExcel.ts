@@ -79,16 +79,25 @@ function rowsToMarkdownChunks(
 }
 
 export const parseExcelImpl: ToolImpl = async (args: ParseExcelArgs, extras) => {
-  const requestedPath = getStringArg(args, "excelPath");
-  const resolvedUri = await resolveRelativePathInDir(requestedPath, extras.ide);
-  if (!resolvedUri) {
-    throw new Error(`Excel file not found: ${requestedPath}`);
+  const requestedPath = getStringArg(args, "excelPath").trim();
+  let excelPath: string;
+  if (requestedPath.startsWith("file:")) {
+    excelPath = fileURLToPath(requestedPath);
+  } else if (path.isAbsolute(requestedPath)) {
+    excelPath = requestedPath;
+  } else {
+    const resolvedUri = await resolveRelativePathInDir(
+      requestedPath,
+      extras.ide,
+    );
+    if (!resolvedUri) {
+      throw new Error(`Excel file not found: ${requestedPath}`);
+    }
+    excelPath =
+      resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
+        ? fileURLToPath(resolvedUri)
+        : path.resolve(requestedPath);
   }
-
-  const excelPath =
-    resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
-      ? fileURLToPath(resolvedUri)
-      : path.resolve(requestedPath);
 
   const sheetName = getOptionalStringArg(args, "sheetName");
   const maxRows =

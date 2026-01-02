@@ -25,16 +25,25 @@ function formatJson(obj: any) {
 }
 
 export const parseDocxImpl: ToolImpl = async (args: ParseDocxArgs, extras) => {
-  const requestedPath = getStringArg(args, "docxPath");
-  const resolvedUri = await resolveRelativePathInDir(requestedPath, extras.ide);
-  if (!resolvedUri) {
-    throw new Error(`DOCX not found: ${requestedPath}`);
+  const requestedPath = getStringArg(args, "docxPath").trim();
+  let docxPath: string;
+  if (requestedPath.startsWith("file:")) {
+    docxPath = fileURLToPath(requestedPath);
+  } else if (path.isAbsolute(requestedPath)) {
+    docxPath = requestedPath;
+  } else {
+    const resolvedUri = await resolveRelativePathInDir(
+      requestedPath,
+      extras.ide,
+    );
+    if (!resolvedUri) {
+      throw new Error(`DOCX not found: ${requestedPath}`);
+    }
+    docxPath =
+      resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
+        ? fileURLToPath(resolvedUri)
+        : path.resolve(requestedPath);
   }
-
-  const docxPath =
-    resolvedUri.startsWith("file://") || resolvedUri.startsWith("file:")
-      ? fileURLToPath(resolvedUri)
-      : path.resolve(requestedPath);
 
   const includeHtml =
     getBooleanArg(args as any, "includeHtml", false) ?? false;

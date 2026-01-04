@@ -17,16 +17,20 @@ export async function enhanceParsedArgs(
   if (
     (toolName === BuiltInToolNames.SingleFindAndReplace ||
       toolName === BuiltInToolNames.MultiEdit) &&
-    currentArgs?.filepath &&
+    (currentArgs?.filepath || currentArgs?.fileUri) &&
     !currentArgs?.editingFileContents
   ) {
     try {
-      const fileUri = await resolveRelativePathInDir(
-        currentArgs.filepath,
-        ideMessenger.ide,
-      );
+      const fileUri =
+        currentArgs.fileUri ||
+        (await resolveRelativePathInDir(
+          currentArgs.filepath,
+          ideMessenger.ide,
+        ));
       if (!fileUri) {
-        throw new Error(`File ${currentArgs.filepath} not found`);
+        throw new Error(
+          `File ${currentArgs.filepath ?? currentArgs.fileUri} not found`,
+        );
       }
       const baseName = getUriPathBasename(fileUri);
       const fileContent = await ideMessenger.ide.readFile(fileUri);

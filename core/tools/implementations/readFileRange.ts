@@ -28,14 +28,27 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
   }
 
   const firstUriMatch = await resolveRelativePathInDir(filepath, extras.ide);
-  if (!firstUriMatch) {
+  let resolvedUri = firstUriMatch;
+  if (!resolvedUri) {
+    const openFiles = await extras.ide.getOpenFiles();
+    const matches = openFiles.filter((uri) => uri.endsWith(filepath));
+    if (matches.length === 1) {
+      resolvedUri = matches[0];
+    } else if (matches.length > 1) {
+      const names = matches.map((uri) => getUriPathBasename(uri)).join(", ");
+      throw new Error(
+        `Multiple open files match "${filepath}": ${names}. Provide a more specific path.`,
+      );
+    }
+  }
+  if (!resolvedUri) {
     throw new Error(
       `File "${filepath}" does not exist. You might want to check the path and try again.`,
     );
   }
 
   // Use the IDE's readRangeInFile method with 0-based range (IDE expects 0-based internally)
-  const content = await extras.ide.readRangeInFile(firstUriMatch, {
+  const content = await extras.ide.readRangeInFile(resolvedUri, {
     start: {
       line: startLine - 1, // Convert from 1-based to 0-based
       character: 0,
@@ -56,12 +69,12 @@ export const readFileRangeImpl: ToolImpl = async (args, extras) => {
 
   return [
     {
-      name: getUriPathBasename(firstUriMatch),
+      name: getUriPathBasename(resolvedUri),
       description: rangeDescription,
       content,
       uri: {
         type: "file",
-        value: firstUriMatch,
+        value: resolvedUri,
       },
     },
   ];

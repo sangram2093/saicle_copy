@@ -31,7 +31,7 @@ export const editFileTool: Tool = {
         filepath: {
           type: "string",
           description:
-            "The path of the file to edit, relative to the root of the workspace.",
+            "The path of the file to edit, relative to the root of the workspace (file URIs and absolute paths are also accepted).",
         },
         changes: {
           type: "string",

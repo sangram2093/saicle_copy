@@ -11,7 +11,7 @@ export async function throwIfFileExceedsHalfOfContext(
     const tokenLimit = model.contextLength / 2;
     if (tokens > tokenLimit) {
       throw new Error(
-        `File ${filepath} is too large (${tokens} tokens vs ${tokenLimit} token limit). Try another approach`,
+        `File ${filepath} is too large (${tokens} tokens vs ${tokenLimit} token limit). Use read_file_range for a smaller slice or search/grep to target specific sections.`,
       );
     }
   }

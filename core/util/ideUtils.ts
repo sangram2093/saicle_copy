@@ -6,19 +6,67 @@ import {
   pathToUriPathSegment,
 } from "./uri";
 
+function isAbsolutePath(value: string) {
+  if (!value) return false;
+  if (value.startsWith("/") || value.startsWith("\\\\")) return true;
+  return /^[a-zA-Z]:[\\/]/.test(value);
+}
+
+function toFileUri(localPath: string) {
+  let normalized = localPath.replace(/\\/g, "/");
+  if (/^[a-zA-Z]:/.test(normalized)) {
+    normalized = `/${normalized}`;
+  }
+  const encoded = normalized
+    .split("/")
+    .map((part, index) => (index === 0 ? part : encodeURIComponent(part)))
+    .join("/");
+  return `file://${encoded}`;
+}
+
+function normalizeFileUri(fileUri: string) {
+  const normalized = fileUri.replace(/\\/g, "/").trim();
+  return encodeURI(normalized);
+}
+
 /*
   This function takes a relative (to workspace) filepath
   And checks each workspace for if it exists or not
   Only returns fully resolved URI if it exists
 */
 export async function resolveRelativePathInDir(
-  path: string,
+  inputPath: string,
   ide: IDE,
   dirUriCandidates?: string[],
 ): Promise<string | undefined> {
+  if (!inputPath) {
+    return undefined;
+  }
+
+  let normalizedInput = inputPath.trim().replace(/^['"]|['"]$/g, "");
+  if (normalizedInput.startsWith("./") || normalizedInput.startsWith(".\\")) {
+    normalizedInput = normalizedInput.slice(2);
+  }
+
+  if (normalizedInput.startsWith("file:")) {
+    const fileUri = normalizeFileUri(normalizedInput);
+    if (await ide.fileExists(fileUri)) {
+      return fileUri;
+    }
+    return undefined;
+  }
+
+  if (isAbsolutePath(normalizedInput)) {
+    const fileUri = toFileUri(normalizedInput);
+    if (await ide.fileExists(fileUri)) {
+      return fileUri;
+    }
+    return undefined;
+  }
+
   const dirs = dirUriCandidates ?? (await ide.getWorkspaceDirs());
   for (const dirUri of dirs) {
-    const fullUri = joinPathsToUri(dirUri, path);
+    const fullUri = joinPathsToUri(dirUri, normalizedInput);
     if (await ide.fileExists(fullUri)) {
       return fullUri;
     }

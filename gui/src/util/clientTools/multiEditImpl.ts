@@ -2,6 +2,7 @@ import {
   inferResolvedUriFromRelativePath,
   resolveRelativePathInDir,
 } from "core/util/ideUtils";
+import { getUriPathBasename } from "core/util/uri";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
@@ -16,7 +17,13 @@ export const multiEditImpl: ClientToolImpl = async (
   toolCallId,
   extras,
 ) => {
-  const { filepath, edits, editingFileContents } = args;
+  const {
+    filepath,
+    edits,
+    editingFileContents,
+    fileUri: fileUriArg,
+    baseName,
+  } = args;
 
   const streamId = uuid();
 
@@ -38,10 +45,38 @@ export const multiEditImpl: ClientToolImpl = async (
 
   // Check if this is creating a new file (first edit has empty old_string)
   const isCreatingNewFile = validateCreatingForMultiEdit(edits);
-  const resolvedUri = await resolveRelativePathInDir(
-    filepath,
-    extras.ideMessenger.ide,
-  );
+  let resolvedUri = fileUriArg;
+  if (resolvedUri) {
+    const exists = await extras.ideMessenger.ide.fileExists(resolvedUri);
+    if (!exists) {
+      resolvedUri = undefined;
+    }
+  }
+
+  if (!resolvedUri) {
+    resolvedUri = await resolveRelativePathInDir(
+      filepath,
+      extras.ideMessenger.ide,
+    );
+  }
+
+  if (!resolvedUri && !isCreatingNewFile) {
+    const openFiles = await extras.ideMessenger.ide.getOpenFiles();
+    const matches = openFiles.filter((uri) => {
+      if (baseName && getUriPathBasename(uri) === baseName) {
+        return true;
+      }
+      return filepath ? uri.endsWith(filepath) : false;
+    });
+    if (matches.length === 1) {
+      resolvedUri = matches[0];
+    } else if (matches.length > 1) {
+      const names = matches.map((uri) => getUriPathBasename(uri)).join(", ");
+      throw new Error(
+        `Multiple open files match ${filepath ?? baseName}: ${names}. Provide a more specific filepath or fileUri.`,
+      );
+    }
+  }
 
   let newContent: string;
   let fileUri: string;

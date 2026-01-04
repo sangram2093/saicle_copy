@@ -45,7 +45,7 @@ WARNINGS:
         filepath: {
           type: "string",
           description:
-            "The path to the file to modify, relative to the root of the workspace",
+            "The path to the file to modify, relative to the root of the workspace (file URIs and absolute paths are also accepted)",
         },
         old_string: {
           type: "string",

@@ -1,4 +1,5 @@
 import { resolveRelativePathInDir } from "core/util/ideUtils";
+import { getUriPathBasename } from "core/util/uri";
 import { v4 as uuid } from "uuid";
 import { applyForEditTool } from "../../redux/thunks/handleApplyStateUpdate";
 import { ClientToolImpl } from "./callClientTool";
@@ -18,6 +19,8 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
     new_string,
     replace_all = false,
     editingFileContents,
+    fileUri,
+    baseName,
   } = args;
 
   const streamId = uuid();
@@ -29,12 +32,47 @@ export const singleFindAndReplaceImpl: ClientToolImpl = async (
   validateSingleEdit(old_string, new_string);
 
   // Resolve the file path
-  const resolvedFilepath = await resolveRelativePathInDir(
-    filepath,
-    extras.ideMessenger.ide,
-  );
+  let resolvedFilepath = fileUri;
+  if (resolvedFilepath) {
+    const exists = await extras.ideMessenger.ide.fileExists(resolvedFilepath);
+    if (!exists) {
+      resolvedFilepath = undefined;
+    }
+  }
+
   if (!resolvedFilepath) {
-    throw new Error(`File ${filepath} does not exist`);
+    let normalizedPath = filepath;
+    if (normalizedPath?.startsWith("./") || normalizedPath?.startsWith(".\\")) {
+      normalizedPath = normalizedPath.slice(2);
+    }
+    resolvedFilepath = await resolveRelativePathInDir(
+      normalizedPath,
+      extras.ideMessenger.ide,
+    );
+  }
+
+  if (!resolvedFilepath) {
+    const openFiles = await extras.ideMessenger.ide.getOpenFiles();
+    const matches = openFiles.filter((uri) => {
+      if (baseName && getUriPathBasename(uri) === baseName) {
+        return true;
+      }
+      return filepath ? uri.endsWith(filepath) : false;
+    });
+    if (matches.length === 1) {
+      resolvedFilepath = matches[0];
+    } else if (matches.length > 1) {
+      const names = matches.map((uri) => getUriPathBasename(uri)).join(", ");
+      throw new Error(
+        `Multiple open files match ${filepath ?? baseName}: ${names}. Provide a more specific filepath or fileUri.`,
+      );
+    }
+  }
+
+  if (!resolvedFilepath) {
+    throw new Error(
+      `File ${filepath} does not exist. Provide a workspace-relative path or fileUri.`,
+    );
   }
 
   // Read the current file content

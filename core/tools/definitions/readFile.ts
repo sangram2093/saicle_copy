@@ -21,7 +21,7 @@ export const readFileTool: Tool = {
         filepath: {
           type: "string",
           description:
-            "The path of the file to read, relative to the root of the workspace (NOT uri or absolute path)",
+            "The path of the file to read, relative to the root of the workspace (file URIs and absolute paths are also accepted)",
         },
       },
     },
